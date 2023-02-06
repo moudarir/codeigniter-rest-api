@@ -82,15 +82,17 @@ INSERT INTO `users_roles` (`id`, `user_id`, `role_id`, `created_at`, `updated_at
 
 CREATE TABLE `api_keys`(
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int unsigned NOT NULL,
+  `user_id` int unsigned DEFAULT NULL,
   `key` binary(40) NOT NULL,
+  `username` binary(8) NOT NULL,
+  `password` binary(16) NOT NULL,
   `ip_addresses` varchar(191) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   UNIQUE KEY `key` (`key`),
-  CONSTRAINT `api_keys_users_fk1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+  UNIQUE KEY `username` (`username`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `api_key_logs`(

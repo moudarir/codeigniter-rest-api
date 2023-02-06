@@ -6,17 +6,6 @@ class StringHelper
 {
 
     /**
-     * @param string $keyword
-     * @param string $string
-     * @param bool $strict
-     * @return bool
-     */
-    public static function isStringContains(string $keyword, string $string, bool $strict = false): bool
-    {
-        return $strict ? strcmp($string, $keyword) === 0 : str_contains($string, $keyword);
-    }
-
-    /**
      * @param string $string
      * @param int $start
      * @param int|null $length

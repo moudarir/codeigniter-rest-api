@@ -2,9 +2,7 @@
 
 namespace Moudarir\CodeigniterApi\Http;
 
-use Moudarir\CodeigniterApi\Helpers\StringHelper;
 use Moudarir\CodeigniterApi\Models\Api\ApiKey;
-use Moudarir\CodeigniterApi\Models\Users\Authentication;
 use CI_Controller;
 use Exception;
 use Firebase\JWT\ExpiredException;
@@ -114,88 +112,44 @@ class Authorization
     {
         // Search online for HTTP_AUTHORIZATION workaround to explain what this is doing
         [$username, $password] = explode(':', base64_decode(substr($http_auth, 6)));
+        $key = $this->apiKeyValue();
 
-        if (!empty($username) && !empty($password)) {
-            try {
-                $user = (new Authentication())->login($username, $password);
-                $this->authorized = true;
+        if (Config::ENABLE_API_KEY === true && empty($key)) {
+            throw new Exception("Clé API manquante.", Config::HTTP_UNAUTHORIZED);
+        }
 
-                if (Config::ENABLE_API_KEY) {
-                    $apiKeyName = Config::API_KEY_NAME;
-                    // Work out the name of the SERVER entry based on config
-                    $keyName = 'HTTP_' . strtoupper(str_replace('-', '_', $apiKeyName));
-                    // Find the key from server or arguments
-                    $key = array_key_exists($apiKeyName, self::$request->getArgs())
-                        ? self::$request->getArgs()[$apiKeyName]
-                        : $this->ci->input->server($keyName);
+        if (empty($username) || empty($password)) {
+            throw new Exception("Erreur de connexion.", Config::HTTP_UNAUTHORIZED);
+        }
 
-                    if (empty($key)) {
-                        throw new Exception("Clé API manquante.", Config::HTTP_UNAUTHORIZED);
-                    }
+        $options = [
+            'username' => $username,
+            'password' => $password,
+        ];
 
-                    $apiKey = (new ApiKey())->find(null, [
-                        'key' => $key,
-                        'user_id' => $user->getId(),
-                    ]);
+        if (Config::ENABLE_API_KEY === true) {
+            $options['key'] = $key;
+        }
 
-                    if ($apiKey !== null) {
-                        $this->authorized = true;
-                        $this->setApiKey($apiKey);
+        $apiKey = (new ApiKey())->find(null, $options);
 
-                        // If "is private key" is enabled, compare the ip address with the list
-                        // of valid ip addresses stored in the database
-                        if ($apiKey->getIpAddresses() !== null) {
-                            // multiple ip addresses must be separated using a comma
-                            $ipaList = explode(',', $apiKey->getIpAddresses());
-                            $ipAddress = $this->ci->input->ip_address();
-                            $ips = array_filter($ipaList, fn ($ipa) => (trim($ipa) === $ipAddress));
+        if ($apiKey !== null) {
+            $this->authorized = true;
+            $this->setApiKey($apiKey);
 
-                            // There is a match, set the the "authorized" value to FALSE
-                            if (!empty($ips)) {
-                                $this->authorized = false;
-                                throw new Exception("Adresse IP non autorisée.", Config::HTTP_UNAUTHORIZED);
-                            }
-                        }
-                    }
+            // If "is private key" is enabled, compare the ip address with the list
+            // of valid ip addresses stored in the database
+            if ($apiKey->getIpAddresses() !== null) {
+                // multiple ip addresses must be separated using a comma
+                $ipaList = explode(',', $apiKey->getIpAddresses());
+                $ipAddress = $this->ci->input->ip_address();
+                $ips = array_filter($ipaList, fn ($ipa) => (trim($ipa) === $ipAddress));
+
+                // There is a match, set the the "authorized" value to FALSE
+                if (!empty($ips)) {
+                    $this->authorized = false;
+                    throw new Exception("Adresse IP non autorisée.", Config::HTTP_UNAUTHORIZED);
                 }
-
-                if ($this->authorized === true) {
-                    $authData = [
-                        'id' => $user->getId(),
-                        'firstname' => $user->getFirstname(),
-                        'lastname' => $user->getLastname(),
-                        'email' => $user->getEmail(),
-                        'role' => $user->getUserRole()->getName(),
-                    ];
-
-                    if (!empty(Config::GENERATE_JWT_TOKEN)) {
-                        $generateJWT = false;
-                        $uri_segment = self::$request->getUriString();
-                        foreach (Config::GENERATE_JWT_TOKEN as $segment) {
-                            if (StringHelper::isStringContains($segment, $uri_segment)) {
-                                $generateJWT = true;
-                                break;
-                            }
-                        }
-
-                        if ($generateJWT === true) {
-                            $secret = getenv("JWT_SECRET");
-                            $payload = [
-                                'iss' => 'http://example.org',
-                                'aud' => 'http://example.com',
-                                'iat' => 1356999524,
-                                'nbf' => 1357000000,
-                                'exp' => time() + (60 * 60),
-                                'user' => $authData
-                            ];
-                            $authData['jwt_token'] = JWT::encode($payload, $secret, 'HS256');
-                        }
-                    }
-
-                    $this->auth_data = $authData;
-                }
-            } catch (Exception $ex) {
-                throw new Exception($ex->getMessage(), Config::HTTP_UNAUTHORIZED);
             }
         }
     }
@@ -230,5 +184,19 @@ class Authorization
     private function httpServerAuth(): ?string
     {
         return $this->ci->input->server('HTTP_AUTHORIZATION') ?: $this->ci->input->server('HTTP_AUTHENTICATION');
+    }
+
+    /**
+     * @return string|null
+     */
+    private function apiKeyValue(): ?string
+    {
+        $apiKeyName = Config::API_KEY_NAME;
+        // Work out the name of the SERVER entry based on config
+        $keyName = 'HTTP_' . strtoupper(str_replace('-', '_', $apiKeyName));
+        // Find the key from server or arguments
+        return array_key_exists($apiKeyName, self::$request->getArgs())
+            ? self::$request->getArgs()[$apiKeyName]
+            : $this->ci->input->server($keyName);
     }
 }

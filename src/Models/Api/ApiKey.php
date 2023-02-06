@@ -11,14 +11,24 @@ class ApiKey extends TableFactory
 {
 
     /**
-     * @var int
+     * @var int|null
      */
-    public int $user_id;
+    public ?int $user_id;
 
     /**
      * @var string
      */
     public string $key;
+
+    /**
+     * @var string
+     */
+    public string $username;
+
+    /**
+     * @var string
+     */
+    public string $password;
 
     /**
      * @var string|null
@@ -57,14 +67,20 @@ class ApiKey extends TableFactory
         $param = [];
 
         if ((int)$id > 0) {
-            $param['where']['`' . $alias . '`.`id`'] = (int)$id;
+            $param['where']['`'.$alias.'`.`id`'] = (int)$id;
         }
         if ((int)$config['user_id'] > 0) {
-            $param['where']['`' . $alias . '`.`user_id`'] = (int)$config['user_id'];
+            $param['where']['`'.$alias.'`.`user_id`'] = (int)$config['user_id'];
         }
         if (!empty($config['key'])) {
-            $param['where']['`' . $alias . '`.`key`'] = $config['key'];
+            $param['where']['`'.$alias.'`.`key`'] = $config['key'];
         }
+        if ($config['username'] !== null && $config['username'] !== ''):
+            $param['where']['`'.$alias.'`.`username`'] = $config['username'];
+        endif;
+        if ($config['password'] !== null && $config['password'] !== ''):
+            $param['where']['`'.$alias.'`.`password`'] = $config['password'];
+        endif;
 
         return $this->findOne($param);
     }
@@ -75,16 +91,14 @@ class ApiKey extends TableFactory
      */
     public function collect(?array $options = null): Collection
     {
-        $default = [
-            'ids' => null,
-        ];
+        $default = ['ids' => null];
         $alias = $this->getAlias();
         $config = $this->setOptions($default, $options);
         $param = [];
 
         if ($config['ids'] !== null) {
             $ids = is_array($config['ids']) ? $config['ids'] : [(int)$config['ids']];
-            $param['where_in']['`' . $alias . '`.`id`'] = $ids;
+            $param['where_in']['`'.$alias.'`.`id`'] = $ids;
         }
 
         return $this->findAllCollection($param);
@@ -107,7 +121,7 @@ class ApiKey extends TableFactory
         self::getDatabase()->trans_start();
         $edited = $this->collect(['ids' => $ids])
             ->map(function (ApiKey $item) {
-                $item->setKey();
+                $item->setKey()->setUsername()->setPassword();
 
                 if ($item->update()) {
                     return $item->getId();
@@ -171,9 +185,9 @@ class ApiKey extends TableFactory
      */
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getUserId(): int
+    public function getUserId(): ?int
     {
         return $this->user_id;
     }
@@ -184,6 +198,22 @@ class ApiKey extends TableFactory
     public function getKey(): string
     {
         return $this->key;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUsername(): string
+    {
+        return $this->username;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPassword(): string
+    {
+        return $this->password;
     }
 
     /**
@@ -199,10 +229,10 @@ class ApiKey extends TableFactory
      */
 
     /**
-     * @param int $user_id
+     * @param int|null $user_id
      * @return self
      */
-    public function setUserId(int $user_id): self
+    public function setUserId(?int $user_id = null): self
     {
         $this->user_id = $user_id;
         return $this;
@@ -213,7 +243,25 @@ class ApiKey extends TableFactory
      */
     public function setKey(): self
     {
-        $this->key = $this->generateKey();
+        $this->key = $this->generateToken(Config::API_KEY_LENGTH);
+        return $this;
+    }
+
+    /**
+     * @return self
+     */
+    public function setUsername(): self
+    {
+        $this->username = $this->generateToken(8, 'username');
+        return $this;
+    }
+
+    /**
+     * @return self
+     */
+    public function setPassword(): self
+    {
+        $this->password = $this->generateToken(16, 'password');
         return $this;
     }
 
@@ -228,24 +276,26 @@ class ApiKey extends TableFactory
     }
 
     /**
+     * @param int $length
+     * @param string $field
      * @param array $exclude
      * @return string
      */
-    private function generateKey(array $exclude = []): string
+    private function generateToken(int $length = 40, string $field = 'key', array $exclude = []): string
     {
-        $token = CommonHelper::generateToken(Config::API_KEY_LENGTH, 'alnum');
+        $token = CommonHelper::generateToken($length, 'alnum');
 
-        self::getDatabase()->where('key', $token);
+        self::getDatabase()->where($field, $token);
 
         if (!empty($exclude)) {
-            self::getDatabase()->where_not_in('key', $exclude);
+            self::getDatabase()->where_not_in($field, $exclude);
         }
 
         $found = self::getDatabase()->count_all_results($this->getTable());
 
         if ($found > 0) {
             $exclude[] = $token;
-            return $this->generateKey($exclude);
+            return $this->generateToken($length, $field, $exclude);
         }
 
         return $token;

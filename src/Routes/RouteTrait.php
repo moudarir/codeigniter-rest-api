@@ -23,4 +23,15 @@ trait RouteTrait
             }
         }
     }
+
+    /**
+     * @param array $route
+     * @return void
+     */
+    public static function web(array &$route): void
+    {
+        foreach (self::ROUTES as $key => $value) {
+            $route[$key] = $value;
+        }
+    }
 }

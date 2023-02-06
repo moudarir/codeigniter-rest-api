@@ -1,0 +1,32 @@
+{
+  "name": "moudarir/codeigniter-rest-api",
+  "description": "Rest API for Codeigniter 3",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Abdessamad MOUDARIR",
+      "email": "amoudarir@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=7.4",
+    "ext-json": "*",
+    "ext-libxml": "*",
+    "ext-simplexml": "*",
+    "tightenco/collect": "^8.83",
+    "firebase/php-jwt": "^6.3"
+  },
+  "require-dev": {
+    "symfony/var-dumper": "^4.2",
+    "filp/whoops": "^2.5",
+    "whoops/soap": "^1.0",
+    "squizlabs/php_codesniffer": "^3.7"
+  },
+  "autoload": {
+    "psr-4" : {
+      "Moudarir\\CodeigniterApi\\" : "src/"
+    }
+  }
+}

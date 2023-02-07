@@ -89,12 +89,12 @@ class ApiKey extends TableFactory
         if (!empty($config['key'])) {
             $param['where']['`'.$alias.'`.`key`'] = $config['key'];
         }
-        if ($config['username'] !== null && $config['username'] !== ''):
+        if ($config['username'] !== null && $config['username'] !== '') {
             $param['where']['`'.$alias.'`.`username`'] = $config['username'];
-        endif;
-        if ($config['password'] !== null && $config['password'] !== ''):
+        }
+        if ($config['password'] !== null && $config['password'] !== '') {
             $param['where']['`'.$alias.'`.`password`'] = $config['password'];
-        endif;
+        }
 
         return $this->findOne($param);
     }

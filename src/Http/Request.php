@@ -26,7 +26,7 @@ class Request
     /**
      * @var string|null
      */
-    private ?string $input_format;
+    private ?string $input_format = null;
 
     /**
      * @var string|null
@@ -325,8 +325,8 @@ class Request
 
             // Check all formats against the CONTENT-TYPE header
             foreach ($this->config['supported_formats'] as $type => $mime) {
-                // $type = format e.g. csv
-                // $mime = mime type e.g. application/csv
+                // $type = format e.g. json
+                // $mime = mime type e.g. application/json
 
                 // If both the mime types match, then return the format
                 if ($contentType === $mime) {
@@ -335,8 +335,6 @@ class Request
                 }
             }
         }
-
-        $this->input_format = null;
     }
 
     /**

@@ -1,0 +1,461 @@
+{
+	"info": {
+		"_postman_id": "9c60332e-879c-4d24-aea8-e5249bb86107",
+		"name": "Codeigniter API REST",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19973493"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "1. Create User - Basic Auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var response = JSON.parse(responseBody);",
+									"",
+									"if (response.data.user_id) {",
+									"  postman.setEnvironmentVariable(\"user_id\", response.data.user_id);",
+									"}",
+									"if (response.data.api_key) {",
+									"  postman.setEnvironmentVariable(\"api_key\", response.data.api_key);",
+									"}",
+									"if (response.data.username) {",
+									"  postman.setEnvironmentVariable(\"username\", response.data.username);",
+									"}",
+									"if (response.data.password) {",
+									"  postman.setEnvironmentVariable(\"password\", response.data.password);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"strictSSL": false
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text",
+								"description": "Optional"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstname\": \"Jane\",\n    \"lastname\": \"DOE\",\n    \"email\": \"jane@doe.com\",\n    \"password\": \"Hwkh3LEdsJWhEF3\",\n    \"role\": \"member\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{endpoint}}users",
+							"host": [
+								"{{endpoint}}users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Login - Basic Auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var response = JSON.parse(responseBody);",
+									"",
+									"if (response.data.jwt_key) {",
+									"  postman.setEnvironmentVariable(\"jwt_key\", response.data.jwt_key);",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"strictSSL": false
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/xml",
+								"type": "text",
+								"description": "Optional",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{endpoint}}users/login",
+							"host": [
+								"{{endpoint}}users"
+							],
+							"path": [
+								"login"
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "xml",
+									"description": "Optional",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Fetch One - Basic Auth",
+					"protocolProfileBehavior": {
+						"strictSSL": false
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/xml",
+								"type": "text",
+								"description": "Optional",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{endpoint}}users/{{user_id}}",
+							"host": [
+								"{{endpoint}}users"
+							],
+							"path": [
+								"{{user_id}}"
+							],
+							"query": [
+								{
+									"key": "with[]",
+									"value": "role",
+									"description": "Optional",
+									"disabled": true
+								},
+								{
+									"key": "format",
+									"value": "xml",
+									"description": "Optional",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Fetch One - Bearer Auth",
+					"protocolProfileBehavior": {
+						"strictSSL": false
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_key}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/xml",
+								"type": "text",
+								"description": "Optional",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{endpoint}}users/{{user_id}}",
+							"host": [
+								"{{endpoint}}users"
+							],
+							"path": [
+								"{{user_id}}"
+							],
+							"query": [
+								{
+									"key": "with[]",
+									"value": "role",
+									"description": "Optional",
+									"disabled": true
+								},
+								{
+									"key": "format",
+									"value": "xml",
+									"description": "Optional",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Fetch ALL - Basic Auth",
+					"protocolProfileBehavior": {
+						"strictSSL": false
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/xml",
+								"description": "Optional",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{endpoint}}users",
+							"host": [
+								"{{endpoint}}users"
+							],
+							"query": [
+								{
+									"key": "with[]",
+									"value": "role",
+									"description": "Optional",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "2",
+									"description": "Optional",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Optional",
+									"disabled": true
+								},
+								{
+									"key": "format",
+									"value": "xml",
+									"description": "Optional",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Fetch ALL - Bearer Auth",
+					"protocolProfileBehavior": {
+						"strictSSL": false
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_key}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/xml",
+								"description": "Optional",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{endpoint}}users",
+							"host": [
+								"{{endpoint}}users"
+							],
+							"query": [
+								{
+									"key": "with[]",
+									"value": "role",
+									"description": "Optional",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "2",
+									"description": "Optional",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Optional",
+									"disabled": true
+								},
+								{
+									"key": "format",
+									"value": "xml",
+									"description": "Optional",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. Update - Bearer Auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"strictSSL": false
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_key}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstname\": \"jane\",\n    \"lastname\": \"Doe\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{endpoint}}users/{{user_id}}",
+							"host": [
+								"{{endpoint}}users"
+							],
+							"path": [
+								"{{user_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "{{password}}",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "{{username}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

@@ -98,10 +98,17 @@ class Response
      */
     public function error($error)
     {
-        $this->response([
-            $this->config['error_field_name']   => true,
-            $this->config['message_field_name'] => $error,
-        ], Config::HTTP_OK);
+        $data = [
+            $this->config['error_field_name'] => true
+        ];
+
+        if (is_array($error)) {
+            $data[$this->config['reasons_field_name']] = $error;
+        } else {
+            $data[$this->config['message_field_name']] = $error;
+        }
+
+        $this->response($data, Config::HTTP_OK);
     }
 
     /**

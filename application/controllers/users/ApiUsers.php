@@ -100,12 +100,10 @@ class ApiUsers extends CoreServer
         ]);
         $entity::getDatabase()->trans_start();
         $user = $entity
-            ->setGenderId((int)$post['gender_id'])
             ->setFirstname($post['firstname'])
             ->setLastname($post['lastname'])
             ->setEmail($post['email'])
-            ->setPassword($hashedPassword)
-            ->setActive(1);
+            ->setPassword($hashedPassword);
         $user_id = $user->create();
 
         if ($user_id === null) {

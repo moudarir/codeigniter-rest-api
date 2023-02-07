@@ -13,21 +13,6 @@ class Role extends TableFactory
     public ?string $name;
 
     /**
-     * @var string|null
-     */
-    public ?string $description;
-
-    /**
-     * @var string|null
-     */
-    public ?string $activation_method;
-
-    /**
-     * @var int|null
-     */
-    public ?int $manual_activation;
-
-    /**
      * Role constructor.
      *
      * @param array $config

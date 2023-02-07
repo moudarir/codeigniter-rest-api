@@ -24,26 +24,6 @@ class UserRole extends TableFactory
     private string $name;
 
     /**
-     * @var string|null
-     */
-    private ?string $description;
-
-    /**
-     * @var string|null
-     */
-    private ?string $dashboard;
-
-    /**
-     * @var string|null
-     */
-    private ?string $activation_method;
-
-    /**
-     * @var int|null
-     */
-    private ?int $manual_activation;
-
-    /**
      * UserRole constructor.
      *
      * @param array $config
@@ -68,7 +48,7 @@ class UserRole extends TableFactory
         $param = [
             'joins' => [
                 'role' => [
-                    'fields' => '`'.$rAls.'`.`name`, `'.$rAls.'`.`description`, `'.$rAls.'`.`dashboard`, `'.$rAls.'`.`activation_method`, `'.$rAls.'`.`manual_activation`',
+                    'fields' => '`'.$rAls.'`.`name`',
                     'table' => '`'.$rTbl.'` `'.$rAls.'`',
                     'type' => 'INNER',
                     'local' => '`'.$alias.'`.`role_id`',
@@ -101,7 +81,7 @@ class UserRole extends TableFactory
         $param = [
             'joins' => [
                 'role' => [
-                    'fields' => '`'.$rAls.'`.`name`, `'.$rAls.'`.`description`, `'.$rAls.'`.`dashboard`, `'.$rAls.'`.`activation_method`, `'.$rAls.'`.`manual_activation`',
+                    'fields' => '`'.$rAls.'`.`name`',
                     'table' => '`'.$rTbl.'` `'.$rAls.'`',
                     'type' => 'INNER',
                     'local' => '`'.$alias.'`.`role_id`',
@@ -126,26 +106,6 @@ class UserRole extends TableFactory
         }
 
         return $this->findAllCollection($param);
-    }
-
-    /**
-     * @param int $user_id
-     * @param int|null $role_id
-     * @return bool
-     */
-    public function remove(int $user_id, ?int $role_id = null): bool
-    {
-        if ($user_id <= 0) {
-            return false;
-        }
-
-        $whereClause = ['user_id' => $user_id];
-
-        if ($role_id !== null) {
-            $whereClause['role_id'] = $role_id;
-        }
-
-        return $this->delete($whereClause);
     }
 
     /**
@@ -174,38 +134,6 @@ class UserRole extends TableFactory
     public function getName(): string
     {
         return $this->name;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getDashboard(): ?string
-    {
-        return $this->dashboard;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getActivationMethod(): ?string
-    {
-        return $this->activation_method;
-    }
-
-    /**
-     * @return int|null
-     */
-    public function getManualActivation(): ?int
-    {
-        return $this->manual_activation;
     }
 
     /**

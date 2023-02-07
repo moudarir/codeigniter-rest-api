@@ -18,14 +18,16 @@ class UserRoute
             'controller' => 'users/apiUsers',
             'https' => [
                 'get' => [
-                    '' => '',
+                    "" => "",
                     self::EXT.self::REGX.self::ANY => "/format/$2$3",
                     "/".self::NUM => "/index/id/$1",
                     "/".self::NUM.self::EXT.self::REGX.self::ANY => "/index/id/$1/format/$3$4",
                 ],
                 'post' => [
-                    '' => '',
+                    "" => "",
                     self::EXT.self::REGX.self::ANY => "/format/$2$3",
+                    "/login" => "/login",
+                    "/login".self::EXT.self::REGX.self::ANY => "/login/format/$2$3",
                 ],
                 'put' => [
                     "/".self::NUM => "/index/id/$1",

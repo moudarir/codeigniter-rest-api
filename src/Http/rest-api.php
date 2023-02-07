@@ -140,6 +140,14 @@ $config['error_field_name'] = 'error';
 $config['message_field_name'] = 'message';
 
 /**
+ * Reasons Field Name
+ *
+ * The field name used for expected errors
+ * Used only if errors was sent  as an array
+ */
+$config['reasons_field_name'] = 'reasons';
+
+/**
  * API Key Name
  *
  * Custom header to specify the API key

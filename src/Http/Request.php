@@ -451,7 +451,7 @@ class Request
         if ($this->getInputFormat() !== null) {
             $this->body = $this->ci->input->raw_input_stream;
             if ($this->getInputFormat() === 'json') {
-                $this->put_args = json_decode($this->ci->input->raw_input_stream);
+                $this->put_args = json_decode($this->ci->input->raw_input_stream, true);
             }
         } elseif ($this->getMethod() === 'put') {
             // If no file type is provided, then there are probably just arguments

@@ -30,6 +30,11 @@ class Authorization
     private ?ApiKey $apiKey = null;
 
     /**
+     * @var array
+     */
+    private array $config;
+
+    /**
      * @var array|null
      */
     private ?array $auth_data = null;
@@ -42,12 +47,17 @@ class Authorization
     /**
      * Authorization constructor.
      *
+     * @param array $config Rest Api Configuration
      * @param Request $request
      */
-    public function __construct(Request $request)
+    public function __construct(array $config, Request $request)
     {
         $this->ci = &get_instance();
-        self::$request = $request;
+        $this->config = $config;
+
+        if (!isset(self::$request)) {
+            self::$request = $request;
+        }
     }
 
     /**
@@ -114,7 +124,7 @@ class Authorization
         [$username, $password] = explode(':', base64_decode(substr($http_auth, 6)));
         $key = $this->apiKeyValue();
 
-        if (Config::ENABLE_API_KEY === true && empty($key)) {
+        if ($this->config['enable_api_key'] === true && empty($key)) {
             throw new Exception("Clé API manquante.", Config::HTTP_UNAUTHORIZED);
         }
 
@@ -127,7 +137,7 @@ class Authorization
             'password' => $password,
         ];
 
-        if (Config::ENABLE_API_KEY === true) {
+        if ($this->config['enable_api_key'] === true) {
             $options['key'] = $key;
         }
 
@@ -191,7 +201,7 @@ class Authorization
      */
     private function apiKeyValue(): ?string
     {
-        $apiKeyName = Config::API_KEY_NAME;
+        $apiKeyName = $this->config['api_key_name'];
         // Work out the name of the SERVER entry based on config
         $keyName = 'HTTP_' . strtoupper(str_replace('-', '_', $apiKeyName));
         // Find the key from server or arguments

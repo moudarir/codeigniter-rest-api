@@ -20,14 +20,14 @@ class Response
     private ?Logger $logger;
 
     /**
-     * @var array
-     */
-    private array $formats = Config::ALL_SUPPORTED_FORMATS;
-
-    /**
      * @var string
      */
-    private string $output_format = Config::DEFAULT_OUTPUT_FORMAT;
+    private string $output_format;
+
+    /**
+     * @var array
+     */
+    private array $config;
 
     /**
      * @var array
@@ -37,17 +37,20 @@ class Response
     /**
      * Response constructor.
      *
+     * @param array $config Rest Api Configuration
      * @param Request|null $request
      * @param Logger|null $logger
      */
-    public function __construct(?Request $request = null, ?Logger $logger = null)
+    public function __construct(array $config, ?Request $request = null, ?Logger $logger = null)
     {
         $this->ci = &get_instance();
         $this->logger = $logger;
+        $this->config = $config;
 
         if ($request instanceof Request) {
-            $this->setOutputFormat($request->getOutputFormat())
-                ->setArgs($request->getArgs());
+            $this->setOutputFormat($request->getOutputFormat())->setArgs($request->getArgs());
+        } else {
+            $this->setOutputFormat($this->config['default_output_format']);
         }
     }
 
@@ -59,30 +62,30 @@ class Response
     public function ok(array $result)
     {
         $data = [
-            Config::ERROR_FIELD_NAME   => false,
-            Config::MESSAGE_FIELD_NAME => '',
+            $this->config['error_field_name']   => false,
+            $this->config['message_field_name'] => '',
         ];
 
         if (array_key_exists('message', $result)) {
-            $data[Config::MESSAGE_FIELD_NAME] = $result['message'];
+            $data[$this->config['message_field_name']] = $result['message'];
         }
 
         if (array_key_exists('total', $result)) {
-            $data[Config::TOTAL_FIELD_NAME] = $result['total'];
+            $data[$this->config['total_field_name']] = $result['total'];
         } elseif (array_key_exists('count', $result)) {
-            $data[Config::TOTAL_FIELD_NAME] = $result['count'];
+            $data[$this->config['total_field_name']] = $result['count'];
         }
 
         if (array_key_exists('page', $result)) {
-            $data[Config::NUM_PAGE_FIELD_NAME] = $result['page'];
+            $data[$this->config['page_field_name']] = $result['page'];
         }
 
         if (array_key_exists('data', $result)) {
-            $data[Config::DATA_FIELD_NAME] = $result['data'];
+            $data[$this->config['data_field_name']] = $result['data'];
         } elseif (array_key_exists('items', $result)) {
-            $data[Config::DATA_FIELD_NAME] = $result['items'];
+            $data[$this->config['data_field_name']] = $result['items'];
         } elseif (array_key_exists('item', $result)) {
-            $data[Config::DATA_FIELD_NAME] = $result['item'];
+            $data[$this->config['data_field_name']] = $result['item'];
         }
 
         $this->response($data, Config::HTTP_OK);
@@ -96,8 +99,8 @@ class Response
     public function error($error)
     {
         $this->response([
-            Config::ERROR_FIELD_NAME   => true,
-            Config::MESSAGE_FIELD_NAME => $error,
+            $this->config['error_field_name']   => true,
+            $this->config['message_field_name'] => $error,
         ], Config::HTTP_OK);
     }
 
@@ -109,11 +112,11 @@ class Response
     public function created(?string $message = null)
     {
         $data = [
-            Config::ERROR_FIELD_NAME => false,
+            $this->config['error_field_name'] => false,
         ];
 
         if (!empty($message)) {
-            $data[Config::MESSAGE_FIELD_NAME] = $message;
+            $data[$this->config['message_field_name']] = $message;
         }
 
         $this->response($data, Config::HTTP_CREATED);
@@ -127,11 +130,11 @@ class Response
     public function modified(?string $message = null)
     {
         $data = [
-            Config::ERROR_FIELD_NAME => false,
+            $this->config['error_field_name'] => false,
         ];
 
         if (!empty($message)) {
-            $data[Config::MESSAGE_FIELD_NAME] = $message;
+            $data[$this->config['message_field_name']] = $message;
         }
 
         $this->response($data, Config::HTTP_NOT_MODIFIED);
@@ -153,8 +156,8 @@ class Response
     public function unauthorized(?string $message = null)
     {
         $this->response([
-            Config::ERROR_FIELD_NAME   => true,
-            Config::MESSAGE_FIELD_NAME => $message ?: "Non autorisée."
+            $this->config['error_field_name']   => true,
+            $this->config['message_field_name'] => $message ?: "Non autorisée."
         ], Config::HTTP_UNAUTHORIZED);
     }
 
@@ -166,8 +169,8 @@ class Response
     public function forbidden(?string $message = null)
     {
         $this->response([
-            Config::ERROR_FIELD_NAME   => true,
-            Config::MESSAGE_FIELD_NAME => $message ?: "Accès interdit."
+            $this->config['error_field_name']   => true,
+            $this->config['message_field_name'] => $message ?: "Accès interdit."
         ], Config::HTTP_FORBIDDEN);
     }
 
@@ -179,8 +182,8 @@ class Response
     public function notFound(?string $message = null)
     {
         $this->response([
-            Config::ERROR_FIELD_NAME   => true,
-            Config::MESSAGE_FIELD_NAME => $message ?: "Enregistrement introuvable."
+            $this->config['error_field_name']   => true,
+            $this->config['message_field_name'] => $message ?: "Enregistrement introuvable."
         ], Config::HTTP_NOT_FOUND);
     }
 
@@ -192,8 +195,8 @@ class Response
     public function methodNotAllowed(?string $message = null)
     {
         $this->response([
-            Config::ERROR_FIELD_NAME   => true,
-            Config::MESSAGE_FIELD_NAME => $message ?: "Méthode introuvable."
+            $this->config['error_field_name']   => true,
+            $this->config['message_field_name'] => $message ?: "Méthode introuvable."
         ], Config::HTTP_METHOD_NOT_ALLOWED);
     }
 
@@ -228,7 +231,7 @@ class Response
     public function response($data = null, ?int $http_code = null, bool $continue = false)
     {
         //if profiling enabled then print profiling data
-        if (Config::ENABLE_PROFILING === false) {
+        if ($this->config['enable_profiling'] === false) {
             ob_start();
             // If the HTTP status is not NULL, then cast as an integer
             if ($http_code !== null) {
@@ -253,15 +256,16 @@ class Response
                     // First, get the output content.
                     try {
                         $output = Format::factory($data)->$method();
+                        $formats = $this->config['supported_formats'];
 
                         // Set the format header
                         // Then, check if the client asked for a callback, and if the output contains this callback :
                         if (isset($args['callback']) && $outputFormat === 'json' &&
                             preg_match('/^'.$args['callback'].'/', $output)
                         ) {
-                            $this->ci->output->set_content_type($this->formats['jsonp']);
+                            $this->ci->output->set_content_type($formats['jsonp']);
                         } else {
-                            $this->ci->output->set_content_type($this->formats[$outputFormat]);
+                            $this->ci->output->set_content_type($formats[$outputFormat]);
                         }
 
                         // An array must be parsed as a string, so as not to cause an array to string error
@@ -271,8 +275,8 @@ class Response
                         }
                     } catch (Exception $e) {
                         $this->response([
-                            Config::ERROR_FIELD_NAME   => true,
-                            Config::MESSAGE_FIELD_NAME => $e->getMessage()
+                            $this->config['error_field_name']   => true,
+                            $this->config['message_field_name'] => $e->getMessage()
                         ], $e->getCode());
                     }
                 } else {
@@ -282,8 +286,8 @@ class Response
                             $data = Format::factory($data)->toJson();
                         } catch (Exception $e) {
                             $this->response([
-                                Config::ERROR_FIELD_NAME   => true,
-                                Config::MESSAGE_FIELD_NAME => $e->getMessage()
+                                $this->config['error_field_name']   => true,
+                                $this->config['message_field_name'] => $e->getMessage()
                             ], $e->getCode());
                         }
                     }
@@ -301,7 +305,7 @@ class Response
             $this->ci->output->set_status_header($http_code);
 
             // JC: Log response code only if rest logging enabled
-            if (Config::ENABLE_LOGGING === true && $this->logger !== null) {
+            if ($this->config['enable_logging'] === true && $this->logger !== null) {
                 $this->logger->update(['response_code' => $http_code]);
             }
 

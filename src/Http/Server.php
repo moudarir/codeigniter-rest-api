@@ -20,6 +20,11 @@ class Server extends CI_Controller
     private float $response_start_time;
 
     /**
+     * @var array
+     */
+    private array $api_config;
+
+    /**
      * @var array|null
      */
     private ?array $auth_data = null;
@@ -46,15 +51,19 @@ class Server extends CI_Controller
 
     /**
      * Server constructor.
+     *
+     * @param string $config_filename ex.: 'rest-api.php' is passed as 'rest-api' without '.php'
      */
-    public function __construct()
+    public function __construct(string $config_filename = 'rest-api')
     {
         parent::__construct();
         load_class('Model', 'core');
 
+        $this->setApiConfig($config_filename);
+
         // Force the use of HTTPS for REST API calls
         if (is_https() === false) {
-            (new Response())->forbidden("Support du protocole HTTPS requis.");
+            (new Response($this->api_config))->forbidden("Support du protocole HTTPS requis.");
         }
 
         // Don't try to parse template variables like {elapsed_time} and {memory_usage}
@@ -62,33 +71,33 @@ class Server extends CI_Controller
         $this->output->parse_exec_vars = false;
 
         // Log the loading time to the log table
-        if (Config::ENABLE_LOGGING === true) {
+        if ($this->api_config['enable_logging'] === true) {
             // Start the timer for how long the request takes
             $this->response_start_time = microtime(true);
         }
 
-        if (Config::ENABLE_LOGGING === true) {
+        if ($this->api_config['enable_logging'] === true) {
             $this->logger = new Logger();
         }
 
         if (!isset(self::$request)) {
             try {
                 if (!isset(self::$request)) {
-                    self::$request = new Request();
+                    self::$request = new Request($this->api_config);
                 }
 
                 if (!isset(self::$response)) {
-                    self::$response = new Response(self::$request ?? null, $this->logger);
+                    self::$response = new Response($this->api_config, self::$request ?? null, $this->logger);
                 }
 
                 // Checking for keys? GET TO WorK!
-                if (Config::ENABLE_AUTHORIZATION === true) {
-                    $auth = new Authorization(self::$request);
+                if ($this->api_config['enable_authentication'] === true) {
+                    $auth = new Authorization($this->api_config, self::$request);
                     $auth->check();
 
                     // They provided a key, but it wasn't valid, so get them out of here
                     if ($auth->isAuthorized() === false) {
-                        if (Config::ENABLE_LOGGING) {
+                        if ($this->api_config['enable_logging']) {
                             $data = [
                                 'key_id' => $auth->getApiKey() !== null ? $auth->getApiKey()->getId() : null,
                                 'method' => self::getRequest()->getMethod(),
@@ -107,7 +116,7 @@ class Server extends CI_Controller
                         $this->api_key = $auth->getApiKey();
                         $this->auth_data = $auth->getAuthData();
 
-                        if (Config::ENABLE_LOGGING) {
+                        if ($this->api_config['enable_logging']) {
                             $data = [
                                 'key_id' => $auth->getApiKey() !== null ? $auth->getApiKey()->getId() : null,
                                 'method' => self::getRequest()->getMethod(),
@@ -118,9 +127,9 @@ class Server extends CI_Controller
                     }
                 }
             } catch (Exception $e) {
-                (new Response())->response([
-                    Config::ERROR_FIELD_NAME   => true,
-                    Config::MESSAGE_FIELD_NAME => $e->getMessage()
+                (new Response($this->api_config))->response([
+                    $this->api_config['error_field_name']   => true,
+                    $this->api_config['message_field_name'] => $e->getMessage()
                 ], $e->getCode());
             }
         }
@@ -134,7 +143,7 @@ class Server extends CI_Controller
     public function __destruct()
     {
         // Log the loading time to the log table
-        if (Config::ENABLE_LOGGING === true && $this->logger !== null) {
+        if ($this->api_config['enable_logging'] === true && $this->logger !== null) {
             $data = ['response_time' => microtime(true) - $this->response_start_time];
             $this->logger->update($data);
         }
@@ -152,7 +161,7 @@ class Server extends CI_Controller
     public function mapping(string $object_called, array $arguments = [])
     {
         // Remove the supported format from the function name e.g. index.json => index
-        $pattern = '/^(.*)\.(?:'.implode('|', array_keys(self::getRequest()->getSupportedFormats())).')$/';
+        $pattern = '/^(.*)\.(?:'.implode('|', array_keys($this->api_config['supported_formats'])).')$/';
         $object_called = preg_replace($pattern, '$1', $object_called);
 
         $method = self::getRequest()->getMethod();
@@ -359,8 +368,35 @@ class Server extends CI_Controller
      */
     protected function xssClean($value, ?bool $xssClean = null)
     {
-        is_bool($xssClean) || $xssClean = Config::XSS_FILTERING;
+        is_bool($xssClean) || $xssClean = $this->api_config['xss_filtering'];
 
         return $xssClean === true ? $this->security->xss_clean($value) : $value;
+    }
+
+    /**
+     * @param string $filename
+     * @return void
+     */
+    private function setApiConfig(string $filename = 'rest-api'): void
+    {
+        static $config;
+
+        if (empty($config)) {
+            if (file_exists(APPPATH . 'config/' . $filename . '.php')) {
+                include(APPPATH . 'config/' . $filename . '.php');
+            } else {
+                $config = [];
+            }
+
+            if (file_exists(APPPATH . 'config/' . ENVIRONMENT . '/' . $filename . '.php')) {
+                include(APPPATH . 'config/' . ENVIRONMENT . '/' . $filename . '.php');
+            } else {
+                if (file_exists(__DIR__.'/'.$filename.'.php')) {
+                    include __DIR__.'/'.$filename.'.php';
+                }
+            }
+        }
+
+        $this->api_config = $config;
     }
 }

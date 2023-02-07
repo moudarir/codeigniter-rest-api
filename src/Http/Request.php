@@ -14,14 +14,14 @@ class Request
     private CI_Controller $ci;
 
     /**
-     * @var string|null
+     * @var array
      */
-    private ?string $method;
+    private array $config;
 
     /**
      * @var string|null
      */
-    private ?string $uri_string = null;
+    private ?string $method;
 
     /**
      * @var string|null
@@ -104,25 +104,26 @@ class Request
     /**
      * Request constructor.
      *
+     * @param array $config Rest Api Configuration
      * @throws Exception
      */
-    public function __construct()
+    public function __construct(array $config)
     {
         $this->ci = &get_instance();
+        $this->config = $config;
 
         // Check to see if the current IP address is blacklisted
         $this->blacklistedIpCheck();
 
-        // How is this request being made? GET, POST, PATCH, DELETE, INSERT, PUT, HEAD or OPTIONS
+        // How is this request being made? GET, POST, PATCH, DELETE, PUT, HEAD or OPTIONS
         $this->setMethod();
-        $this->uri_string = $this->ci->uri->uri_string();
 
         // Check for CORS access request
-        if (Config::CORS_CHECK === true) {
+        if ($this->config['enable_cors_check'] === true) {
             $this->checkCORS();
         }
 
-        // Create an argument container if it doesn't exist e.g. _get_args
+        // Create an argument container if it doesn't exist e.g. get_args
         $methodArgs = $this->getMethod() . '_args';
         $setMethod = 'set' . $this->getMethod(true);
         if (isset($this->$methodArgs) === false) {
@@ -162,12 +163,12 @@ class Request
         $this->setArgs($this->$methodArgs);
 
         // Allow only ajax requests
-        if ($this->ci->input->is_ajax_request() === false && Config::ALLOW_AJAX_ONLY) {
+        if ($this->ci->input->is_ajax_request() === false && $this->config['allow_ajax_only']) {
             throw new Exception('Seules les demandes AJAX sont autorisées.', Config::HTTP_NOT_ACCEPTABLE);
         }
 
         // If whitelist is enabled it has the first chance to kick them out
-        if (Config::ENABLE_IP_WHITELIST) {
+        if ($this->config['enable_ip_whitelist']) {
             $this->whitelistIpCheck();
         }
     }
@@ -183,34 +184,6 @@ class Request
         }
 
         return ucfirst($this->method);
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getUriString(): ?string
-    {
-        return $this->uri_string;
-    }
-
-    /**
-     * @return array
-     */
-    public function getSupportedFormats(): array
-    {
-        return Config::ALL_SUPPORTED_FORMATS;
-    }
-
-    /**
-     * Gets the default format from the configuration. Fallbacks to 'json'
-     * if the corresponding configuration option $config['rest_default_format']
-     * is missing or is empty.
-     *
-     * @return string The default supported input format
-     */
-    private function getDefaultOutputFormat()
-    {
-        return Config::DEFAULT_OUTPUT_FORMAT;
     }
 
     /**
@@ -316,7 +289,7 @@ class Request
         $method = null;
 
         // Determine whether the ENABLE_EMULATE_REQUEST setting is enabled
-        if (Config::ENABLE_EMULATE_REQUEST === true) {
+        if ($this->config['enable_emulate_request'] === true) {
             $method = $this->ci->input->post('_method');
             if ($method === null) {
                 $method = $this->ci->input->server('HTTP_X_HTTP_METHOD_OVERRIDE');
@@ -330,7 +303,7 @@ class Request
             $method = $this->ci->input->method();
         }
 
-        if (in_array($method, Config::ALLOWED_HTTP_METHODS) && method_exists($this, 'set' . ucfirst($method))) {
+        if (in_array($method, $this->config['allowed_http_methods']) && method_exists($this, 'set' . ucfirst($method))) {
             $this->method = $method;
         } else {
             $this->method = 'get';
@@ -351,7 +324,7 @@ class Request
             $contentType = (strpos($contentType, ';') !== false ? current(explode(';', $contentType)) : $contentType);
 
             // Check all formats against the CONTENT-TYPE header
-            foreach ($this->getSupportedFormats() as $type => $mime) {
+            foreach ($this->config['supported_formats'] as $type => $mime) {
                 // $type = format e.g. csv
                 // $mime = mime type e.g. application/csv
 
@@ -373,7 +346,7 @@ class Request
      */
     private function detectOutputFormat(): ?string
     {
-        $formats = $this->getSupportedFormats();
+        $formats = $this->config['supported_formats'];
         // Concatenate formats to a regex pattern e.g. \.(csv|json|xml)
         $pattern = '/\.(' . implode('|', array_keys($formats)) . ')($|\/)/';
         $matches = [];
@@ -396,7 +369,7 @@ class Request
         $http_accept = $this->ci->input->server('HTTP_ACCEPT');
 
         // Otherwise, check the HTTP_ACCEPT server variable
-        if (Config::IGNORE_HTTP_ACCEPT === false && $http_accept !== null) {
+        if ($this->config['ignore_http_accept'] === false && $http_accept !== null) {
             // Check all formats against the HTTP_ACCEPT header
             foreach (array_keys($formats) as $format) {
                 // Has this format been requested?
@@ -416,7 +389,7 @@ class Request
             }
         }
 
-        return $this->getDefaultOutputFormat();
+        return $this->config['default_output_format'];
     }
 
     /**
@@ -561,33 +534,33 @@ class Request
     }
 
     /**
-     * Checks if the client's ip is in the 'Config::IP_BLACKLIST' config and generates a 401 response
+     * Checks if the client's ip is in the 'ip_blacklist' config and generates a 401 response
      *
      * @return void
      * @throws Exception
      */
     private function blacklistedIpCheck()
     {
-        if (Config::ENABLE_IP_BLACKLIST) {
+        if ($this->config['enable_ip_blacklist']) {
             // Match an ip address in a blacklist e.g. 127.0.0.0, 0.0.0.0
             $pattern = sprintf('/(?:,\s*|^)\Q%s\E(?=,\s*|$)/m', $this->ci->input->ip_address());
 
             // Returns 1, 0 or FALSE (on error only). Therefore implicitly convert 1 to TRUE
-            if (preg_match($pattern, Config::IP_BLACKLIST)) {
+            if (preg_match($pattern, $this->config['ip_blacklist'])) {
                 throw new Exception('IP refusée.', Config::HTTP_UNAUTHORIZED);
             }
         }
     }
 
     /**
-     * Check if the client's ip is in the 'rest_ip_whitelist' config and generates a 401 response.
+     * Check if the client's ip is in the 'ip_whitelist' config and generates a 401 response.
      *
      * @return void
      * @throws Exception
      */
     private function whitelistIpCheck()
     {
-        $whitelist = explode(',', Config::IP_WHITELIST);
+        $whitelist = explode(',', $this->config['ip_whitelist']);
 
         array_push($whitelist, '127.0.0.1', '::1');
 
@@ -609,12 +582,12 @@ class Request
      */
     private function checkCORS(): void
     {
-        $allowedHeaders = implode(', ', Config::CORS_ALLOWED_HEADERS);
-        $allowedMethods = implode(', ', Config::CORS_ALLOWED_METHODS);
-        $forcedHeaders = Config::CORS_FORCED_HEADERS;
+        $allowedHeaders = implode(', ', $this->config['cors_allowed_headers']);
+        $allowedMethods = implode(', ', $this->config['cors_allowed_methods']);
+        $forcedHeaders = $this->config['cors_forced_headers'];
 
         // If we want to allow any domain to access the API
-        if (Config::CORS_ALLOW_ANY_DOMAIN === true) {
+        if ($this->config['cors_allow_any_domain'] === true) {
             header('Access-Control-Allow-Origin: *');
             header('Access-Control-Allow-Headers: ' . $allowedHeaders);
             header('Access-Control-Allow-Methods: ' . $allowedMethods);
@@ -627,7 +600,7 @@ class Request
             }
 
             // If the origin domain is in the allowed_cors_origins list, then add the Access Control headers
-            if (in_array($origin, Config::CORS_ALLOWED_ORIGINS)) {
+            if (in_array($origin, $this->config['cors_allowed_origins'])) {
                 header('Access-Control-Allow-Origin: ' . $origin);
                 header('Access-Control-Allow-Headers: ' . $allowedHeaders);
                 header('Access-Control-Allow-Methods: ' . $allowedMethods);

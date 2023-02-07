@@ -3,12 +3,26 @@
 namespace Moudarir\CodeigniterApi\Models\Api;
 
 use Moudarir\CodeigniterApi\Helpers\CommonHelper;
-use Moudarir\CodeigniterApi\Http\Config;
 use Moudarir\CodeigniterApi\Models\TableFactory;
 use Tightenco\Collect\Support\Collection;
 
 class ApiKey extends TableFactory
 {
+
+    /**
+     * API Key Length
+     */
+    const API_KEY_LENGTH = 40;
+
+    /**
+     * API Key Length
+     */
+    const USERNAME_LENGTH = 8;
+
+    /**
+     * API Key Length
+     */
+    const PASSWORD_LENGTH = 16;
 
     /**
      * @var int|null
@@ -243,7 +257,7 @@ class ApiKey extends TableFactory
      */
     public function setKey(): self
     {
-        $this->key = $this->generateToken(Config::API_KEY_LENGTH);
+        $this->key = $this->generateToken(self::API_KEY_LENGTH);
         return $this;
     }
 
@@ -252,7 +266,7 @@ class ApiKey extends TableFactory
      */
     public function setUsername(): self
     {
-        $this->username = $this->generateToken(8, 'username');
+        $this->username = $this->generateToken(self::USERNAME_LENGTH, 'username');
         return $this;
     }
 
@@ -261,7 +275,7 @@ class ApiKey extends TableFactory
      */
     public function setPassword(): self
     {
-        $this->password = $this->generateToken(16, 'password');
+        $this->password = $this->generateToken(self::PASSWORD_LENGTH, 'password');
         return $this;
     }
 
@@ -281,7 +295,7 @@ class ApiKey extends TableFactory
      * @param array $exclude
      * @return string
      */
-    private function generateToken(int $length = 40, string $field = 'key', array $exclude = []): string
+    private function generateToken(int $length, string $field = 'key', array $exclude = []): string
     {
         $token = CommonHelper::generateToken($length, 'alnum');
 

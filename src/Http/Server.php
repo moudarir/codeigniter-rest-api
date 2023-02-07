@@ -52,18 +52,23 @@ class Server extends CI_Controller
     /**
      * Server constructor.
      *
-     * @param string $config_filename ex.: 'rest-api.php' is passed as 'rest-api' without '.php'
+     * @param string $config_filename ex.: 'rest-api.php' is passed as 'rest-api' without '.php'.
+     *                                The filename is used to load config and language
      */
     public function __construct(string $config_filename = 'rest-api')
     {
         parent::__construct();
         load_class('Model', 'core');
 
+        // Load the configuration
         $this->setApiConfig($config_filename);
+
+        // Load the language file
+        $this->lang->load($config_filename);
 
         // Force the use of HTTPS for REST API calls
         if (is_https() === false) {
-            (new Response($this->api_config))->forbidden("Support du protocole HTTPS requis.");
+            (new Response($this->api_config))->forbidden($this->lang->line('rest_https_protocol_required'));
         }
 
         // Don't try to parse template variables like {elapsed_time} and {memory_usage}
@@ -175,7 +180,7 @@ class Server extends CI_Controller
 
         // Sure it exists, but can they do anything with it?
         if (!method_exists($this, $controllerMethod)) {
-            self::getResponse()->methodNotAllowed("Chemin inconnue.");
+            self::getResponse()->methodNotAllowed($this->lang->line('rest_unknown_path'));
         }
 
         // Call the controller method and passed arguments

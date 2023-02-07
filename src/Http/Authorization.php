@@ -68,7 +68,7 @@ class Authorization
         $http_auth = $this->httpServerAuth();
 
         if ($http_auth === null) {
-            throw new Exception("Clé du jeton manquante.", Config::HTTP_UNAUTHORIZED);
+            throw new Exception($this->ci->lang->line('rest_auth_key_not_found'), Config::HTTP_UNAUTHORIZED);
         }
 
         if (strpos(strtolower($http_auth), 'basic') === 0) {
@@ -125,11 +125,11 @@ class Authorization
         $key = $this->apiKeyValue();
 
         if ($this->config['enable_api_key'] === true && empty($key)) {
-            throw new Exception("Clé API manquante.", Config::HTTP_UNAUTHORIZED);
+            throw new Exception($this->ci->lang->line('rest_api_key_not_found'), Config::HTTP_UNAUTHORIZED);
         }
 
         if (empty($username) || empty($password)) {
-            throw new Exception("Erreur de connexion.", Config::HTTP_UNAUTHORIZED);
+            throw new Exception($this->ci->lang->line('rest_empty_username_or_password'), Config::HTTP_UNAUTHORIZED);
         }
 
         $options = [
@@ -158,7 +158,7 @@ class Authorization
                 // There is a match, set the the "authorized" value to FALSE
                 if (!empty($ips)) {
                     $this->authorized = false;
-                    throw new Exception("Adresse IP non autorisée.", Config::HTTP_UNAUTHORIZED);
+                    throw new Exception($this->ci->lang->line('rest_api_ip_address_denied'), Config::HTTP_UNAUTHORIZED);
                 }
             }
         }
@@ -181,7 +181,7 @@ class Authorization
             throw new Exception($e->getMessage(), Config::HTTP_UNAUTHORIZED);
         } catch (ExpiredException $e) {
             // provided JWT is trying to be used after "exp" claim.
-            throw new Exception("Clé du jeton expirée.", Config::HTTP_UNAUTHORIZED);
+            throw new Exception($this->ci->lang->line('rest_expired_jwt_token'), Config::HTTP_UNAUTHORIZED);
         } catch (UnexpectedValueException $e) {
             // errors having to do with JWT signature and claims
             throw new Exception($e->getMessage(), Config::HTTP_UNAUTHORIZED);

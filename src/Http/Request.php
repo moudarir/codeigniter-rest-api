@@ -164,7 +164,7 @@ class Request
 
         // Allow only ajax requests
         if ($this->ci->input->is_ajax_request() === false && $this->config['allow_ajax_only']) {
-            throw new Exception('Seules les demandes AJAX sont autorisées.', Config::HTTP_NOT_ACCEPTABLE);
+            throw new Exception($this->ci->lang->line('rest_allow_ajax_only'), Config::HTTP_NOT_ACCEPTABLE);
         }
 
         // If whitelist is enabled it has the first chance to kick them out
@@ -547,7 +547,7 @@ class Request
 
             // Returns 1, 0 or FALSE (on error only). Therefore implicitly convert 1 to TRUE
             if (preg_match($pattern, $this->config['ip_blacklist'])) {
-                throw new Exception('IP refusée.', Config::HTTP_UNAUTHORIZED);
+                throw new Exception($this->ci->lang->line('rest_ip_blacklist'), Config::HTTP_UNAUTHORIZED);
             }
         }
     }
@@ -571,7 +571,7 @@ class Request
         }
 
         if (in_array($this->ci->input->ip_address(), $whitelist) === false) {
-            throw new Exception("Adresse IP non autorisée.", Config::HTTP_UNAUTHORIZED);
+            throw new Exception($this->ci->lang->line('rest_ip_whitelist'), Config::HTTP_UNAUTHORIZED);
         }
     }
 

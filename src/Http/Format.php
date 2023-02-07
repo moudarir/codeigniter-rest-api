@@ -40,7 +40,8 @@ class Format
             if (method_exists($this, $method)) {
                 $data = call_user_func([$this, $method], $data);
             } else {
-                throw new Exception(strtoupper($fromType)." format not supported.", Config::HTTP_BAD_REQUEST);
+                $message = sprintf($this->ci->lang->line('rest_response_format_not_supported'), strtoupper($fromType));
+                throw new Exception($message, Config::HTTP_BAD_REQUEST);
             }
         }
 
@@ -197,7 +198,7 @@ class Format
 
         // An invalid jsonp callback function provided.
         // Though I don't believe this should be hardcoded here
-        $data['warning'] = 'INVALID JSONP CALLBACK: ' . $callback;
+        $data['warning'] = sprintf($this->ci->lang->line('rest_invalid_jsonp_callback'), $callback);
 
         return json_encode($data, JSON_UNESCAPED_UNICODE);
     }

@@ -127,7 +127,7 @@ class Response
      *
      * @param string|null $message
      */
-    public function modified(?string $message = null)
+    public function notModified(?string $message = null)
     {
         $data = [
             $this->config['error_field_name'] => false,
@@ -149,7 +149,7 @@ class Response
     }
 
     /**
-     * NOT FOUND (401)
+     * UNAUTHORIZED (401)
      *
      * @param string|null $message
      */
@@ -157,12 +157,12 @@ class Response
     {
         $this->response([
             $this->config['error_field_name']   => true,
-            $this->config['message_field_name'] => $message ?: "Non autorisée."
+            $this->config['message_field_name'] => $message ?: $this->ci->lang->line('rest_unauthorized')
         ], Config::HTTP_UNAUTHORIZED);
     }
 
     /**
-     * NOT FOUND (403)
+     * FORBIDDEN (403)
      *
      * @param string|null $message
      */
@@ -170,7 +170,7 @@ class Response
     {
         $this->response([
             $this->config['error_field_name']   => true,
-            $this->config['message_field_name'] => $message ?: "Accès interdit."
+            $this->config['message_field_name'] => $message ?: $this->ci->lang->line('rest_forbidden_access')
         ], Config::HTTP_FORBIDDEN);
     }
 
@@ -183,12 +183,12 @@ class Response
     {
         $this->response([
             $this->config['error_field_name']   => true,
-            $this->config['message_field_name'] => $message ?: "Enregistrement introuvable."
+            $this->config['message_field_name'] => $message ?: $this->ci->lang->line('rest_not_found')
         ], Config::HTTP_NOT_FOUND);
     }
 
     /**
-     * NOT FOUND (405)
+     * METHOD NOT ALLOWED (405)
      *
      * @param string|null $message
      */
@@ -196,7 +196,7 @@ class Response
     {
         $this->response([
             $this->config['error_field_name']   => true,
-            $this->config['message_field_name'] => $message ?: "Méthode introuvable."
+            $this->config['message_field_name'] => $message ?: $this->ci->lang->line('rest_method_not_allowed')
         ], Config::HTTP_METHOD_NOT_ALLOWED);
     }
 

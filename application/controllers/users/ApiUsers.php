@@ -1,5 +1,6 @@
 <?php
 
+use Firebase\JWT\JWT;
 use Moudarir\CodeigniterApi\Helpers\ArrayHelper;
 use Moudarir\CodeigniterApi\Models\Users\User;
 
@@ -58,10 +59,35 @@ class ApiUsers extends CoreServer
     }
 
     /**
-     * @see ApiUsers::loginPost()
+     * @see ApiUsers::indexPost()
      */
-    public function loginPost()
+    public function indexPost()
     {
-        self::getResponse()->ok(['data' => $this->getAuthData()]);
+        $secret = getenv("JWT_SECRET");
+        $payload = [
+            'iss' => 'http://example.org',
+            'aud' => 'http://example.com',
+            'iat' => 1356999524,
+            'nbf' => 1357000000,
+            'exp' => time() + (60 * 60),
+            'user' => [
+                'id' => $this->getApiKey()->getUserId()
+            ]
+        ];
+        self::getResponse()->ok([
+            'data' => [
+                'jwt_key' => JWT::encode($payload, $secret, 'HS256'),
+                'user_id' => $this->getApiKey()->getUserId()
+            ]
+        ]);
+    }
+
+    /**
+     * @see ApiUsers::indexPut()
+     */
+    public function indexPut()
+    {
+        $args = [$this->post(), $this->put('firstname'), $this->get()];
+        self::getResponse()->ok(['data' => $args]);
     }
 }

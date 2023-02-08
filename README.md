@@ -421,4 +421,4 @@ Update the `endpoint` variable to point to your Rest server. Ex: (https//myapi.c
 
 You can now use the Postman collection to test available requests.
 
-> **Note:** The order of execution of the requests must be respected.
+> **Note:** In the Postman collection, the order of execution of the requests must be respected.

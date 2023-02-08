@@ -60,31 +60,22 @@ class Response
      */
     public function ok(array $result)
     {
-        $data = [
-            $this->config['error_field_name']   => false,
-            $this->config['message_field_name'] => '',
-        ];
+        $data = [$this->config['error_field_name'] => false];
 
         if (array_key_exists('message', $result)) {
             $data[$this->config['message_field_name']] = $result['message'];
         }
 
-        if (array_key_exists('total', $result)) {
-            $data[$this->config['total_field_name']] = $result['total'];
-        } elseif (array_key_exists('count', $result)) {
-            $data[$this->config['total_field_name']] = $result['count'];
+        if (array_key_exists('total', $result) || array_key_exists('count', $result)) {
+            $data[$this->config['total_field_name']] = $result['total'] ?? $result['count'];
         }
 
         if (array_key_exists('page', $result)) {
             $data[$this->config['page_field_name']] = $result['page'];
         }
 
-        if (array_key_exists('data', $result)) {
-            $data[$this->config['data_field_name']] = $result['data'];
-        } elseif (array_key_exists('items', $result)) {
-            $data[$this->config['data_field_name']] = $result['items'];
-        } elseif (array_key_exists('item', $result)) {
-            $data[$this->config['data_field_name']] = $result['item'];
+        if (array_key_exists('data', $result) || array_key_exists('items', $result) || array_key_exists('item', $result)) {
+            $data[$this->config['data_field_name']] = $result['data'] ?? ($result['items'] ?? $result['item']);
         }
 
         $this->response($data, Config::HTTP_OK);

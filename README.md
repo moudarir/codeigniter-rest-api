@@ -202,7 +202,7 @@ And now, we can create our `application/controllers/Users.php` controller:
 defined('BASEPATH') || exit('No direct script access allowed');
 
 use Firebase\JWT\JWT;
-use Moudarir\CodeigniterApi\Helpers\ArrayHelper;
+use Moudarir\CodeigniterApi\Http\Helpers;
 use Moudarir\CodeigniterApi\Models\Api\ApiKey;
 use Moudarir\CodeigniterApi\Models\Users\User;
 use Moudarir\CodeigniterApi\Models\Users\UserRole;
@@ -238,7 +238,7 @@ class Users extends CoreApi
     {
         $id = $this->get('id');
         $with = $this->get('with');
-        $options = ArrayHelper::formatApiWith($with);
+        $options = Helpers::formatApiWith($with);
         $entity = new User();
 
         if ($id !== null) {

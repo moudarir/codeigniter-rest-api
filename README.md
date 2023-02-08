@@ -6,11 +6,11 @@ A RESTful server implementation for Codeigniter 3 based on [CodeIgniter RestServ
 
 ## Table of contents
 
-1. [Requirements](#Requirements)
-2. [Installation](#Installation)
-3. [Implementation](#Implementation)
-4. [Usage](#Usage)
-5. [Postman collection](#Postman%20collection)
+1. [Requirements](#requirements)
+2. [Installation](#installation)
+3. [Implementation](#implementation)
+4. [Usage](#usage)
+5. [Postman collection](#postman-collection)
 
 ### Requirements
 

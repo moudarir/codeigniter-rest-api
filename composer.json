@@ -1,6 +1,6 @@
 {
   "name": "moudarir/codeigniter-rest-api",
-  "description": "Rest API for Codeigniter 3",
+  "description": "Codeigniter 3 Rest API",
   "type": "library",
   "license": "MIT",
   "authors": [

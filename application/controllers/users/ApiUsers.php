@@ -1,7 +1,7 @@
 <?php
 
 use Firebase\JWT\JWT;
-use Moudarir\CodeigniterApi\Helpers\ArrayHelper;
+use Moudarir\CodeigniterApi\http\Helpers;
 use Moudarir\CodeigniterApi\Models\Api\ApiKey;
 use Moudarir\CodeigniterApi\Models\Users\User;
 use Moudarir\CodeigniterApi\Models\Users\UserRole;
@@ -37,7 +37,7 @@ class ApiUsers extends CoreServer
     {
         $id = $this->get('id');
         $with = $this->get('with');
-        $options = ArrayHelper::formatApiWith($with);
+        $options = Helpers::formatApiWith($with);
         $entity = new User();
 
         if ($id !== null) {

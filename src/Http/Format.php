@@ -2,7 +2,6 @@
 
 namespace Moudarir\CodeigniterApi\Http;
 
-use Moudarir\CodeigniterApi\Helpers\CommonHelper;
 use CI_Controller;
 use Exception;
 use SimpleXMLElement;
@@ -36,7 +35,7 @@ class Format
 
         // If the provided data is already formatted we should probably convert it to an array
         if ($fromType !== null) {
-            $method = CommonHelper::stringToCamelcase('from_' . $fromType);
+            $method = Helpers::stringToCamelcase('from_' . $fromType);
             if (method_exists($this, $method)) {
                 $data = call_user_func([$this, $method], $data);
             } else {

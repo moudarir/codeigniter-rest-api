@@ -2,7 +2,6 @@
 
 namespace Moudarir\CodeigniterApi\Http;
 
-use Moudarir\CodeigniterApi\Helpers\CommonHelper;
 use CI_Controller;
 use Exception;
 
@@ -255,7 +254,7 @@ class Response
             } elseif ($data !== null) { // If data is not NULL and a HTTP status code provided, then continue
                 $outputFormat = $this->getOutputFormat();
                 $args = $this->getArgs();
-                $method = CommonHelper::stringToCamelcase('to_' . $outputFormat);
+                $method = Helpers::stringToCamelcase('to_' . $outputFormat);
 
                 // If the format method exists, call and return the output in that format
                 if (method_exists(Format::class, $method)) {

@@ -2,8 +2,7 @@
 
 namespace Moudarir\CodeigniterApi\Models;
 
-use Moudarir\CodeigniterApi\Helpers\CommonHelper;
-use Moudarir\CodeigniterApi\Helpers\StringHelper;
+use Moudarir\CodeigniterApi\Http\Helpers;
 use CI_DB_query_builder;
 use CI_DB_result;
 use CI_Model;
@@ -266,28 +265,6 @@ class TableFactory extends CI_Model
     public function findAllCollection(?array $params = null): Collection
     {
         $_data = $this->findAll($params);
-
-        return collect($_data ?: []);
-    }
-
-    /**
-     * @param array|null $params
-     * @return array[]|null
-     */
-    public function fetchAll(?array $params = null): ?array
-    {
-        $query = $this->prepareQuery($params);
-
-        return $query->num_rows() > 0 ? $query->result_array() : null;
-    }
-
-    /**
-     * @param array|null $params
-     * @return Collection
-     */
-    public function fetchAllCollection(?array $params = null): Collection
-    {
-        $_data = $this->fetchAll($params);
 
         return collect($_data ?: []);
     }
@@ -580,7 +557,7 @@ class TableFactory extends CI_Model
     {
         if (!isset($this->table)) {
             if ($table === null) {
-                $className = CommonHelper::camelcase($this->getFormattedClassName(), '_');
+                $className = Helpers::camelcase($this->getFormattedClassName(), '_');
                 $this->table = strtolower($className).'s';
             } else {
                 $this->table = $table;
@@ -596,8 +573,8 @@ class TableFactory extends CI_Model
     {
         if (!isset($this->alias)) {
             if ($alias === null) {
-                $className = CommonHelper::camelcase($this->getFormattedClassName());
-                $this->alias = StringHelper::firstLetters($className, '', 'lower');
+                $className = Helpers::camelcase($this->getFormattedClassName());
+                $this->alias = Helpers::firstLetters($className, '', 'lower');
             } else {
                 $this->alias = $alias;
             }

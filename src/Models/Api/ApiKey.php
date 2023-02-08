@@ -2,9 +2,8 @@
 
 namespace Moudarir\CodeigniterApi\Models\Api;
 
-use Moudarir\CodeigniterApi\Helpers\CommonHelper;
+use Moudarir\CodeigniterApi\Http\Helpers;
 use Moudarir\CodeigniterApi\Models\TableFactory;
-use Tightenco\Collect\Support\Collection;
 
 class ApiKey extends TableFactory
 {
@@ -101,9 +100,9 @@ class ApiKey extends TableFactory
 
     /**
      * @param array|null $options
-     * @return Collection
+     * @return ApiKey[]|array
      */
-    public function collect(?array $options = null): Collection
+    public function all(?array $options = null): array
     {
         $default = ['ids' => null];
         $alias = $this->getAlias();
@@ -115,7 +114,7 @@ class ApiKey extends TableFactory
             $param['where_in']['`'.$alias.'`.`id`'] = $ids;
         }
 
-        return $this->findAllCollection($param);
+        return $this->findAll($param) ?: [];
     }
 
     /**
@@ -132,22 +131,18 @@ class ApiKey extends TableFactory
         }
 
         $response = ['error' => true];
+        $finished = 0;
         self::getDatabase()->trans_start();
-        $edited = $this->collect(['ids' => $ids])
-            ->map(function (ApiKey $item) {
-                $item->setKey()->setUsername()->setPassword();
+        $apiKeys = $this->all(['ids' => $ids]);
+        foreach ($apiKeys as $apiKey) {
+            $apiKey->setKey()->setUsername()->setPassword();
 
-                if ($item->update()) {
-                    return $item->getId();
-                }
-
-                return null;
-            })
-            ->reject(fn ($id) => ($id === null))
-            ->toArray();
+            if ($apiKey->update()) {
+                $finished++;
+            }
+        }
         self::getDatabase()->trans_complete();
 
-        $finished = count($edited);
         if (self::getDatabase()->trans_status() === false || $finished === 0) {
             $response['message'] = "Aucune clé API n'a été régénérée.";
         } else {
@@ -174,14 +169,16 @@ class ApiKey extends TableFactory
         }
 
         $response = ['error' => true];
+        $finished = 0;
         self::getDatabase()->trans_start();
-        $deleted = $this->collect(['ids' => $ids])
-            ->map(fn (ApiKey $item) => $item->delete())
-            ->reject(fn ($status) => ($status === false))
-            ->toArray();
+        $apiKeys = $this->all(['ids' => $ids]);
+        foreach ($apiKeys as $apiKey) {
+            if ($apiKey->delete()) {
+                $finished++;
+            }
+        }
         self::getDatabase()->trans_complete();
 
-        $finished = count($deleted);
         if (self::getDatabase()->trans_status() === false || $finished === 0) {
             $response['message'] = "Aucune clé API n'a été supprimée.";
         } else {
@@ -297,7 +294,7 @@ class ApiKey extends TableFactory
      */
     private function generateToken(int $length, string $field = 'key', array $exclude = []): string
     {
-        $token = CommonHelper::generateToken($length, 'alnum');
+        $token = Helpers::generateToken($length, 'alnum');
 
         self::getDatabase()->where($field, $token);
 

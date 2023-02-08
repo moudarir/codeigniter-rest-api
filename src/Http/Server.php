@@ -2,7 +2,6 @@
 
 namespace Moudarir\CodeigniterApi\Http;
 
-use Moudarir\CodeigniterApi\Helpers\CommonHelper;
 use CI_Controller;
 use Exception;
 use Moudarir\CodeigniterApi\Models\Api\ApiKey;
@@ -170,11 +169,11 @@ class Server extends CI_Controller
         $object_called = preg_replace($pattern, '$1', $object_called);
 
         $method = self::getRequest()->getMethod();
-        $controllerMethod = CommonHelper::stringToCamelcase($object_called . '_' . $method);
+        $controllerMethod = Helpers::stringToCamelcase($object_called . '_' . $method);
 
         // Does this method exist? If not, try executing an index method
         if (!method_exists($this, $controllerMethod)) {
-            $controllerMethod = CommonHelper::stringToCamelcase('index_' . $method);
+            $controllerMethod = Helpers::stringToCamelcase('index_' . $method);
             array_unshift($arguments, $object_called);
         }
 

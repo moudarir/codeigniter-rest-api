@@ -63,11 +63,12 @@ The first thing to do is copy the `rest-api.php` configuration file into the `co
 
 > **Tip:** If you find that the default configuration works for you, then copying the configuration file is optional.
 
-Make sure that the `enable_hooks` and `subclass_prefix`  keys in `application/config/config.php` file are set as following:
+Make sure that the `enable_hooks`, `subclass_prefix` and `composer_autoload`  keys in `application/config/config.php` file are set as following:
 
 ```php
 $config['enable_hooks'] = true;
 $config['subclass_prefix'] = 'Core';
+$config['composer_autoload'] = true; // Or the path to 'autoload.php' file. Ex: APPPATH.'vendor/autoload.php'
 ```
 
 Next, append the following code to your `application/config/hooks.php` file:

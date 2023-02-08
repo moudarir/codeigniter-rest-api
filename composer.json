@@ -19,9 +19,6 @@
     "firebase/php-jwt": "^6.3"
   },
   "require-dev": {
-    "symfony/var-dumper": "^4.2",
-    "filp/whoops": "^2.5",
-    "whoops/soap": "^1.0",
     "squizlabs/php_codesniffer": "^3.7"
   },
   "autoload": {

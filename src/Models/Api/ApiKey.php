@@ -119,19 +119,16 @@ class ApiKey extends TableFactory
 
     /**
      * @param array $ids
-     * @return array
+     * @return int
      */
-    public function reset(array $ids): array
+    public function reset(array $ids): int
     {
+        $finished = 0;
+
         if (empty($ids)) {
-            return [
-                'error' => true,
-                'message' => "Aucune clé API n'est sélectionnée."
-            ];
+            return $finished;
         }
 
-        $response = ['error' => true];
-        $finished = 0;
         self::getDatabase()->trans_start();
         $apiKeys = $this->all(['ids' => $ids]);
         foreach ($apiKeys as $apiKey) {
@@ -143,32 +140,21 @@ class ApiKey extends TableFactory
         }
         self::getDatabase()->trans_complete();
 
-        if (self::getDatabase()->trans_status() === false || $finished === 0) {
-            $response['message'] = "Aucune clé API n'a été régénérée.";
-        } else {
-            $response['error'] = false;
-            $response['message'] = $finished === 1
-                ? "Une clé API régénérée avec succès"
-                : $finished." clés API régénérées avec succès.";
-        }
-
-        return $response;
+        return $finished;
     }
 
     /**
      * @param array $ids
-     * @return array
+     * @return int
      */
-    public function remove(array $ids): array
+    public function remove(array $ids): int
     {
+        $finished = 0;
+
         if (empty($ids)) {
-            return [
-                'error' => true,
-                'message' => "Aucune clé API n'est sélectionnée."
-            ];
+            return $finished;
         }
 
-        $response = ['error' => true];
         $finished = 0;
         self::getDatabase()->trans_start();
         $apiKeys = $this->all(['ids' => $ids]);
@@ -179,16 +165,7 @@ class ApiKey extends TableFactory
         }
         self::getDatabase()->trans_complete();
 
-        if (self::getDatabase()->trans_status() === false || $finished === 0) {
-            $response['message'] = "Aucune clé API n'a été supprimée.";
-        } else {
-            $response['error'] = false;
-            $response['message'] = $finished === 1
-                ? "Une clé API supprimée avec succès"
-                : $finished." clés API supprimées avec succès.";
-        }
-
-        return $response;
+        return $finished;
     }
 
     /**

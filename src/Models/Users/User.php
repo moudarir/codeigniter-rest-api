@@ -2,8 +2,8 @@
 
 namespace Moudarir\CodeigniterApi\Models\Users;
 
+use Moudarir\CodeigniterApi\Http\Helpers;
 use Moudarir\CodeigniterApi\Models\TableFactory;
-use Tightenco\Collect\Support\Collection;
 
 class User extends TableFactory
 {
@@ -82,9 +82,9 @@ class User extends TableFactory
 
     /**
      * @param array|null $options
-     * @return Collection
+     * @return User[]|array
      */
-    public function collect(?array $options = null): Collection
+    public function all(?array $options = null): array
     {
         $default = [
             'ids' => null,
@@ -129,30 +129,29 @@ class User extends TableFactory
             $param['limit'] = (int)$config['limit'];
         }
 
-        $collection = $this->findAllCollection($param);
+        $items = $this->findAll($param);
 
-        if ($collection->isNotEmpty()) {
-            $ids = $collection->keyBy('id')->keys()->all();
-            $roles = [];
+        if (!empty($items)) {
+            $ids = array_keys(array_column($items, 'id', 'id'));
 
             if ($config['role'] !== false) {
-                $ugOptions = is_array($config['role'])
+                $urOptions = is_array($config['role'])
                     ? $this->setOptions(['user_ids' => $ids], $config['role'])
                     : ['user_ids' => $ids];
-                $roles = (new UserRole())->collect($ugOptions)->groupBy('user_id')->toArray();
-            }
+                $roles = Helpers::groupBy('user_id', (new UserRole())->all($urOptions));
 
-            $collection->each(function (User $user) use ($roles) {
-                $id = $user->getId();
+                foreach ($items as $item) {
+                    $id = $item->getId();
 
-                if (!empty($roles)) {
-                    $userRole = array_key_exists($id, $roles) ? $roles[$id][0] : null;
-                    $user->setUserRole($userRole);
+                    if (!empty($roles)) {
+                        $userRole = array_key_exists($id, $roles) ? $roles[$id][0] : null;
+                        $item->setUserRole($userRole);
+                    }
                 }
-            });
+            }
         }
 
-        return $collection;
+        return $items ?: [];
     }
 
     /**

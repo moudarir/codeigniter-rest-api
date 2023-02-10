@@ -3,7 +3,6 @@
 namespace Moudarir\CodeigniterApi\Models\Users;
 
 use Moudarir\CodeigniterApi\Models\TableFactory;
-use Tightenco\Collect\Support\Collection;
 
 class UserRole extends TableFactory
 {
@@ -65,9 +64,9 @@ class UserRole extends TableFactory
 
     /**
      * @param array|null $options
-     * @return Collection
+     * @return UserRole[]|array
      */
-    public function collect(?array $options = null): Collection
+    public function all(?array $options = null): array
     {
         $default = [
             'role_ids' => null,
@@ -105,7 +104,7 @@ class UserRole extends TableFactory
             $param['limit'] = (int)$config['limit'];
         }
 
-        return $this->findAllCollection($param);
+        return $this->findAll($param) ?: [];
     }
 
     /**

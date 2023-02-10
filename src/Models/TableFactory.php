@@ -6,7 +6,6 @@ use Moudarir\CodeigniterApi\Http\Helpers;
 use CI_DB_query_builder;
 use CI_DB_result;
 use CI_Model;
-use Tightenco\Collect\Support\Collection;
 
 class TableFactory extends CI_Model
 {
@@ -72,10 +71,9 @@ class TableFactory extends CI_Model
 
     /**
      * @param int|array $id
-     * @param bool $asArray
-     * @return static|array|null
+     * @return static|null
      */
-    public function __invoke($id, bool $asArray = false)
+    public function __invoke($id)
     {
         $param = [];
         if (is_array($id) && !empty($id)) {
@@ -93,7 +91,7 @@ class TableFactory extends CI_Model
         }
 
         if (!empty($param)) {
-            return $asArray === true ? $this->fetchOne($param) : $this->findOne($param);
+            return $this->findOne($param);
         }
 
         return null;
@@ -229,25 +227,6 @@ class TableFactory extends CI_Model
 
     /**
      * @param array|null $params
-     * @return array|null
-     */
-    public function fetchOne(?array $params = null): ?array
-    {
-        if (is_array($params)) {
-            if (!array_key_exists('limit', $params)) {
-                $params['limit'] = 1;
-            }
-        } else {
-            $params = ['limit' => 1];
-        }
-
-        $query = $this->prepareQuery($params);
-
-        return $query->num_rows() > 0 ? $query->row_array() : null;
-    }
-
-    /**
-     * @param array|null $params
      * @param string|null $className
      * @return static[]|null
      */
@@ -256,17 +235,6 @@ class TableFactory extends CI_Model
         $query = $this->prepareQuery($params);
 
         return $query->num_rows() > 0 ? $query->custom_result_object($className ?: static::class) : null;
-    }
-
-    /**
-     * @param array|null $params
-     * @return Collection
-     */
-    public function findAllCollection(?array $params = null): Collection
-    {
-        $_data = $this->findAll($params);
-
-        return collect($_data ?: []);
     }
 
     /**

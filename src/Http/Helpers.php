@@ -154,4 +154,28 @@ class Helpers
 
         return implode($separator, $letters);
     }
+
+    /**
+     * @param string $key
+     * @param $data
+     * @return array
+     */
+    public static function groupBy(string $key, $data): array
+    {
+        $result = [];
+
+        foreach ($data as $val) {
+            if (is_object($val)) {
+                if (property_exists($val, $key)) {
+                    $result[$val->$key][] = $val;
+                }
+            } else {
+                if (array_key_exists($key, $val)) {
+                    $result[$val[$key]][] = $val;
+                }
+            }
+        }
+
+        return $result;
+    }
 }

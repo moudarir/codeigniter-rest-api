@@ -259,10 +259,9 @@ class Users extends CoreApi
         $total = $entity->count($options);
         $options['page'] = $this->get('page');
         $options['limit'] = $this->get('limit');
-        $items = $entity->collect($options)->toArray();
         $response = [
             'total' => $total,
-            'items' => $total === 0 ? [] : $entity->normalizeAll($items),
+            'items' => $total === 0 ? [] : $entity->normalizeAll($entity->all($options)),
         ];
 
         if ($options['page'] !== null) {

@@ -392,11 +392,13 @@ class Server extends CI_Controller
                 $config = [];
             }
 
-            if (file_exists(APPPATH . 'config/' . ENVIRONMENT . '/' . $filename . '.php')) {
-                include(APPPATH . 'config/' . ENVIRONMENT . '/' . $filename . '.php');
-            } else {
-                if (file_exists(__DIR__.'/'.$filename.'.php')) {
-                    include __DIR__.'/'.$filename.'.php';
+            if (empty($config)) {
+                if (file_exists(APPPATH . 'config/' . ENVIRONMENT . '/' . $filename . '.php')) {
+                    include(APPPATH . 'config/' . ENVIRONMENT . '/' . $filename . '.php');
+                } else {
+                    if (file_exists(__DIR__.'/'.$filename.'.php')) {
+                        include __DIR__.'/'.$filename.'.php';
+                    }
                 }
             }
         }

@@ -300,22 +300,24 @@ class Users extends CoreApi
             'threads' => 2
         ]);
         $entity::getDatabase()->trans_start();
-        $user = $entity
-            ->setFirstname($post['firstname'])
-            ->setLastname($post['lastname'])
-            ->setEmail($post['email'])
-            ->setPassword($hashedPassword);
-        $user_id = $user->create();
+        $data = [
+            'firstname' => $post['firstname'],
+            'lastname' => $post['lastname'],
+            'email' => $post['email'],
+            'password' => $hashedPassword,
+        ];
+        $user_id = $entity->add($data);
 
         if ($user_id === null) {
             $entity::getDatabase()->trans_rollback();
             self::getResponse()->error("Error occurred during account creation.");
         }
 
-        $urEntity = new UserRole();
-        $role_id = $this->roles[$post['role']];
-        $userRole = $urEntity->setUserId($user_id)->setRoleId($role_id);
-        $user_role_id = $userRole->create();
+        $urData = [
+            'user_id' => $user_id,
+            'role_id' => $this->roles[$post['role']],
+        ];
+        $user_role_id = (new UserRole())->add($urData);
 
         if ($user_role_id === null) {
             $entity::getDatabase()->trans_rollback();
@@ -323,13 +325,13 @@ class Users extends CoreApi
         }
 
         $akEntity = new ApiKey();
-        $apiKey = $akEntity
-            ->setUserId($user_id)
-            ->setKey()
-            ->setUsername()
-            ->setPassword()
-            ->setIpAddresses();
-        $api_key_id = $apiKey->create();
+        $data = [
+            'user_id' => $user_id,
+            'key' => $akEntity->setKey(),
+            'username' => $akEntity->setUsername(),
+            'password' => $akEntity->setPassword(),
+        ];
+        $api_key_id = $akEntity->add($data);
 
         if ($api_key_id === null) {
             $entity::getDatabase()->trans_rollback();
@@ -345,10 +347,10 @@ class Users extends CoreApi
         self::getResponse()->ok([
             'message' => "User account created successfully.",
             'data' => [
-                'user_id' => $apiKey->getUserId(),
-                'api_key' => $apiKey->getKey(),
-                'username' => $apiKey->getUsername(),
-                'password' => $apiKey->getPassword(),
+                'user_id' => $data['user_id'],
+                'api_key' => $data['key'],
+                'username' => $data['username'],
+                'password' => $data['password'],
             ]
         ]);
     }
@@ -372,6 +374,7 @@ class Users extends CoreApi
     public function loginPost()
     {
         $secret = getenv("JWT_SECRET");
+        $secret !== false || $secret = $this->getApiConfig()['jwt_secret'];
         $user = (new User())->find($this->getApiKey()->getUserId(), ['role' => true]);
         $payload = [
             'iss' => 'http://example.org',

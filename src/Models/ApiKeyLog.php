@@ -1,57 +1,18 @@
 <?php
 
-namespace Moudarir\CodeigniterApi\Models\Api;
+namespace Moudarir\CodeigniterApi\Models;
 
-use Moudarir\CodeigniterApi\Models\TableFactory;
+use CI_Model;
 
-class ApiKeyLog extends TableFactory
+class ApiKeyLog extends CI_Model
 {
 
     /**
-     * @var int|null
-     */
-    public ?int $key_id;
-
-    /**
-     * @var string
-     */
-    public string $uri_string;
-
-    /**
-     * @var string
-     */
-    public string $method;
-
-    /**
-     * @var string
-     */
-    public string $ip_address;
-
-    /**
-     * @var float|null
-     */
-    public ?float $response_time;
-
-    /**
-     * @var int
-     */
-    public int $authorized;
-
-    /**
-     * @var int|null
-     */
-    public int $response_code;
-
-    /**
      * ApiKeyLog constructor.
-     *
-     * @param array $config
      */
-    public function __construct(array $config = [])
+    public function __construct()
     {
-        $default = ['table' => 'api_key_logs'];
-        $config = array_merge($default, $config);
-        parent::__construct($config);
+        parent::__construct();
     }
 
     /**
@@ -77,9 +38,9 @@ class ApiKeyLog extends TableFactory
             $data['ip_address'] = $this->input->ip_address();
         }
 
-        self::getDatabase()->insert($this->getTable(), $data, true);
+        $this->db->insert('`api_key_logs`', $data, true);
 
-        return self::getDatabase()->affected_rows() > 0 ? self::getDatabase()->insert_id() : null;
+        return $this->db->affected_rows() > 0 ? $this->db->insert_id() : null;
     }
 
     /**
@@ -97,9 +58,9 @@ class ApiKeyLog extends TableFactory
             $data['updated_at'] = date("Y-m-d H:i:s", time());
         }
 
-        self::getDatabase()->where('id', $id, true);
-        self::getDatabase()->update($this->getTable(), $data);
+        $this->db->where('id', $id, true);
+        $this->db->update('`api_key_logs`', $data);
 
-        return self::getDatabase()->affected_rows() === 1;
+        return $this->db->affected_rows() === 1;
     }
 }

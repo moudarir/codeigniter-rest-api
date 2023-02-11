@@ -23,10 +23,6 @@ class Role extends TableFactory
     }
 
     /**
-     * Getters
-     */
-
-    /**
      * @return string|null
      */
     public function getName(): ?string

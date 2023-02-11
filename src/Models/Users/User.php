@@ -200,6 +200,27 @@ class User extends TableFactory
     }
 
     /**
+     * @param array $data
+     * @return int|null
+     */
+    public function add(array $data): ?int
+    {
+        if (!array_key_exists('created_at', $data) || !array_key_exists('updated_at', $data)) {
+            $currentDate = date("Y-m-d H:i:s", time());
+            if (!array_key_exists('created_at', $data)) {
+                $data['created_at'] = $currentDate;
+            }
+            if (!array_key_exists('updated_at', $data)) {
+                $data['updated_at'] = $currentDate;
+            }
+        }
+
+        self::getDatabase()->insert($this->getTable(), $data, true);
+
+        return self::getDatabase()->affected_rows() > 0 ? self::getDatabase()->insert_id() : null;
+    }
+
+    /**
      * @param User|null $_user
      * @return array
      */
@@ -240,10 +261,6 @@ class User extends TableFactory
     }
 
     /**
-     * Getters
-     */
-
-    /**
      * @return string|null
      */
     public function getFirstname(): string
@@ -273,50 +290,6 @@ class User extends TableFactory
     public function getUserRole(): ?UserRole
     {
         return $this->user_role ?? null;
-    }
-
-    /**
-     * Setters
-     */
-
-    /**
-     * @param string $firstname
-     * @return self
-     */
-    public function setFirstname(string $firstname): self
-    {
-        $this->firstname = $firstname;
-        return $this;
-    }
-
-    /**
-     * @param string $lastname
-     * @return self
-     */
-    public function setLastname(string $lastname): self
-    {
-        $this->lastname = $lastname;
-        return $this;
-    }
-
-    /**
-     * @param string $email
-     * @return self
-     */
-    public function setEmail(string $email): self
-    {
-        $this->email = $email;
-        return $this;
-    }
-
-    /**
-     * @param string $password
-     * @return self
-     */
-    public function setPassword(string $password): self
-    {
-        $this->password = $password;
-        return $this;
     }
 
     /**

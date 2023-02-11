@@ -18,16 +18,6 @@ class TableFactory extends CI_Model
     /**
      * @var string
      */
-    public string $created_at;
-
-    /**
-     * @var string
-     */
-    public string $updated_at;
-
-    /**
-     * @var string
-     */
     protected string $table;
 
     /**
@@ -258,122 +248,6 @@ class TableFactory extends CI_Model
     }
 
     /**
-     * @param bool $dry
-     * @param string|null $_table
-     * @return int|string|void|null
-     */
-    public function create(bool $dry = false, ?string $_table = null)
-    {
-        $table = $this->getTable($_table);
-
-        if (!isset($this->created_at)) {
-            $this->setCreatedAt();
-        }
-        if (!isset($this->updated_at)) {
-            $this->setUpdatedAt();
-        }
-
-        if ($dry === true) {
-            return self::getDatabase()->set($this)->get_compiled_insert($table);
-        }
-
-        self::getDatabase()->insert($table, $this, true);
-
-        return self::getDatabase()->affected_rows() > 0 ? self::getDatabase()->insert_id() : null;
-    }
-
-    /**
-     * @param static[] $data
-     * @param string|null $_table
-     * @return int
-     */
-    public function createBatch(array $data, ?string $_table = null): int
-    {
-        if (empty($data)) {
-            return 0;
-        }
-
-        foreach ($data as $datum) {
-            if (!isset($datum->created_at)) {
-                $datum->setCreatedAt();
-            }
-            if (!isset($datum->updated_at)) {
-                $datum->setUpdatedAt();
-            }
-        }
-
-        $table = $this->getTable($_table);
-        $batch = self::getDatabase()->insert_batch($table, $data, true);
-
-        return $batch !== false ? $batch : 0;
-    }
-
-    /**
-     * @param mixed $_id
-     * @param bool $dry
-     * @param string|null $_table
-     * @return bool|string
-     */
-    public function update($_id = null, bool $dry = false, ?string $_table = null)
-    {
-        $id = $_id ?: $this->getId();
-        $table = $this->getTable($_table);
-
-        if ($id !== null) {
-            if (is_array($id)) {
-                self::getDatabase()->where($id, null, true);
-            } else {
-                self::getDatabase()->where('id', $id, true);
-            }
-        }
-
-        if (!isset($this->updated_at)) {
-            $this->setUpdatedAt();
-        }
-
-        if ($dry === true) {
-            return self::getDatabase()->set($this)->get_compiled_update($table);
-        }
-
-        self::getDatabase()->update($table, $this);
-
-        return self::getDatabase()->affected_rows() === 1;
-    }
-
-    /**
-     * @param static[] $data
-     * @param string $index
-     * @param mixed $where
-     * @param string|null $_table
-     * @return int Number of affected rows
-     */
-    public function updateBatch(array $data, string $index = 'id', $where = null, ?string $_table = null): int
-    {
-        if (empty($data)) {
-            return 0;
-        }
-
-        if (!is_null($where)) {
-            if (is_array($where)) {
-                self::getDatabase()->where($where, null, true);
-            } else {
-                self::getDatabase()->where('id', $where, true);
-            }
-        }
-
-        foreach ($data as $datum) {
-            if (!isset($datum->updated_at)) {
-                $datum->setUpdatedAt();
-            }
-        }
-
-        $table = $this->getTable($_table);
-        $batch = self::getDatabase()->update_batch($table, $data, $index);
-
-        return $batch !== false ? $batch : 0;
-    }
-
-    /**
      * @param array|int|null $_id
      * @param array|null $extra
      * @param string|null $_table
@@ -417,24 +291,6 @@ class TableFactory extends CI_Model
     }
 
     /**
-     * @param string|null $_created_at
-     * @return string|null
-     */
-    public function getCreatedAt(?string $_created_at = null)
-    {
-        return $_created_at ?: ($this->created_at ?? null);
-    }
-
-    /**
-     * @param string|null $_updated_at
-     * @return string|null
-     */
-    public function getUpdatedAt(?string $_updated_at = null)
-    {
-        return $_updated_at ?: ($this->updated_at ?? null);
-    }
-
-    /**
      * @param string|null $table
      * @return string
      */
@@ -462,50 +318,6 @@ class TableFactory extends CI_Model
     /**
      * Setters
      */
-
-    /**
-     * @param int $id
-     * @return self
-     */
-    public function setId(int $id): self
-    {
-        $this->id = $id;
-        return $this;
-    }
-
-    /**
-     * @param string|int|null $created_at
-     * @return self
-     */
-    public function setCreatedAt($created_at = null): self
-    {
-        if ($created_at === null) {
-            $this->created_at = date("Y-m-d H:i:s", time());
-        } elseif (is_int($created_at)) {
-            $this->created_at = date("Y-m-d H:i:s", $created_at);
-        } else {
-            $this->created_at = $created_at;
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param string|int|null $updated_at
-     * @return self
-     */
-    public function setUpdatedAt($updated_at = null): self
-    {
-        if ($updated_at === null) {
-            $this->updated_at = date("Y-m-d H:i:s", time());
-        } elseif (is_int($updated_at)) {
-            $this->updated_at = date("Y-m-d H:i:s", $updated_at);
-        } else {
-            $this->updated_at = $updated_at;
-        }
-
-        return $this;
-    }
 
     /**
      * @param array $default

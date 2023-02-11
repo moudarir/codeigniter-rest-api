@@ -55,134 +55,51 @@ class ApiKeyLog extends TableFactory
     }
 
     /**
-     * Getters
-     */
-
-    /**
+     * @param array $data
      * @return int|null
      */
-    public function getKeyId(): ?int
+    public function add(array $data): ?int
     {
-        return $this->key_id;
+        if (!array_key_exists('created_at', $data) || !array_key_exists('updated_at', $data)) {
+            $currentDate = date("Y-m-d H:i:s", time());
+            if (!array_key_exists('created_at', $data)) {
+                $data['created_at'] = $currentDate;
+            }
+            if (!array_key_exists('updated_at', $data)) {
+                $data['updated_at'] = $currentDate;
+            }
+        }
+
+        if (!array_key_exists('uri_string', $data)) {
+            $data['uri_string'] = $this->uri->uri_string();
+        }
+        if (!array_key_exists('ip_address', $data)) {
+            $data['ip_address'] = $this->input->ip_address();
+        }
+
+        self::getDatabase()->insert($this->getTable(), $data, true);
+
+        return self::getDatabase()->affected_rows() > 0 ? self::getDatabase()->insert_id() : null;
     }
 
     /**
-     * @return string
+     * @param int $id
+     * @param array $data
+     * @return bool
      */
-    public function getUriString(): string
+    public function edit(int $id, array $data): bool
     {
-        return $this->uri_string;
-    }
+        if (empty($data)) {
+            return false;
+        }
 
-    /**
-     * @return string
-     */
-    public function getMethod(): string
-    {
-        return $this->method;
-    }
+        if (!array_key_exists('updated_at', $data)) {
+            $data['updated_at'] = date("Y-m-d H:i:s", time());
+        }
 
-    /**
-     * @return string
-     */
-    public function getIpAddress(): string
-    {
-        return $this->ip_address;
-    }
+        self::getDatabase()->where('id', $id, true);
+        self::getDatabase()->update($this->getTable(), $data);
 
-    /**
-     * @return float|null
-     */
-    public function getResponseTime(): ?float
-    {
-        return $this->response_time;
-    }
-
-    /**
-     * @return int
-     */
-    public function getAuthorized(): int
-    {
-        return $this->authorized;
-    }
-
-    /**
-     * @return int|null
-     */
-    public function getResponseCode(): ?int
-    {
-        return $this->response_code;
-    }
-
-    /**
-     * Setters
-     */
-
-    /**
-     * @param int|null $key_id
-     * @return self
-     */
-    public function setKeyId(?int $key_id): self
-    {
-        $this->key_id = $key_id;
-        return $this;
-    }
-
-    /**
-     * @return self
-     */
-    public function setUriString(): self
-    {
-        $this->uri_string = $this->uri->uri_string();
-        return $this;
-    }
-
-    /**
-     * @param string $method
-     * @return self
-     */
-    public function setMethod(string $method): self
-    {
-        $this->method = $method;
-        return $this;
-    }
-
-    /**
-     * @return self
-     */
-    public function setIpAddress(): self
-    {
-        $this->ip_address = $this->input->ip_address();
-        return $this;
-    }
-
-    /**
-     * @param float|null $response_time
-     * @return self
-     */
-    public function setResponseTime(?float $response_time = null): self
-    {
-        $this->response_time = $response_time;
-        return $this;
-    }
-
-    /**
-     * @param int $authorized
-     * @return self
-     */
-    public function setAuthorized(int $authorized): self
-    {
-        $this->authorized = $authorized;
-        return $this;
-    }
-
-    /**
-     * @param int|null $response_code
-     * @return self
-     */
-    public function setResponseCode(?int $response_code = null): self
-    {
-        $this->response_code = $response_code;
-        return $this;
+        return self::getDatabase()->affected_rows() === 1;
     }
 }

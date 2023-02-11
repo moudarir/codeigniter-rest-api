@@ -148,8 +148,8 @@ class Server extends CI_Controller
     {
         // Log the loading time to the log table
         if ($this->api_config['enable_logging'] === true && $this->logger !== null) {
-            $data = ['response_time' => microtime(true) - $this->response_start_time];
-            $this->logger->update($data);
+            $responseTime = microtime(true) - $this->response_start_time;
+            $this->logger->update(['response_time' => $responseTime]);
         }
     }
 
@@ -192,6 +192,14 @@ class Server extends CI_Controller
     public function getApiKey(): ?ApiKey
     {
         return $this->api_key ?? null;
+    }
+
+    /**
+     * @return array
+     */
+    public function getApiConfig(): array
+    {
+        return $this->api_config;
     }
 
     /**

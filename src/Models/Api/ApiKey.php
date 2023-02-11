@@ -118,6 +118,48 @@ class ApiKey extends TableFactory
     }
 
     /**
+     * @param array $data
+     * @return int|null
+     */
+    public function add(array $data): ?int
+    {
+        if (!array_key_exists('created_at', $data) || !array_key_exists('updated_at', $data)) {
+            $currentDate = date("Y-m-d H:i:s", time());
+            if (!array_key_exists('created_at', $data)) {
+                $data['created_at'] = $currentDate;
+            }
+            if (!array_key_exists('updated_at', $data)) {
+                $data['updated_at'] = $currentDate;
+            }
+        }
+
+        self::getDatabase()->insert($this->getTable(), $data, true);
+
+        return self::getDatabase()->affected_rows() > 0 ? self::getDatabase()->insert_id() : null;
+    }
+
+    /**
+     * @param int $id
+     * @param array $data
+     * @return bool
+     */
+    public function edit(int $id, array $data): bool
+    {
+        if (empty($data)) {
+            return false;
+        }
+
+        if (!array_key_exists('updated_at', $data)) {
+            $data['updated_at'] = date("Y-m-d H:i:s", time());
+        }
+
+        self::getDatabase()->where('id', $id, true);
+        self::getDatabase()->update($this->getTable(), $data);
+
+        return self::getDatabase()->affected_rows() === 1;
+    }
+
+    /**
      * @param array $ids
      * @return int
      */
@@ -132,9 +174,13 @@ class ApiKey extends TableFactory
         self::getDatabase()->trans_start();
         $apiKeys = $this->all(['ids' => $ids]);
         foreach ($apiKeys as $apiKey) {
-            $apiKey->setKey()->setUsername()->setPassword();
+            $data = [
+                'key' => $apiKey->setKey(),
+                'username' => $apiKey->setUsername(),
+                'password' => $apiKey->setPassword(),
+            ];
 
-            if ($apiKey->update()) {
+            if ($apiKey->edit($apiKey->getId(), $data)) {
                 $finished++;
             }
         }
@@ -217,50 +263,27 @@ class ApiKey extends TableFactory
      */
 
     /**
-     * @param int|null $user_id
-     * @return self
+     * @return string
      */
-    public function setUserId(?int $user_id = null): self
+    public function setKey(): string
     {
-        $this->user_id = $user_id;
-        return $this;
+        return $this->generateToken(self::API_KEY_LENGTH);
     }
 
     /**
-     * @return self
+     * @return string
      */
-    public function setKey(): self
+    public function setUsername(): string
     {
-        $this->key = $this->generateToken(self::API_KEY_LENGTH);
-        return $this;
+        return $this->generateToken(self::USERNAME_LENGTH, 'username');
     }
 
     /**
-     * @return self
+     * @return string
      */
-    public function setUsername(): self
+    public function setPassword(): string
     {
-        $this->username = $this->generateToken(self::USERNAME_LENGTH, 'username');
-        return $this;
-    }
-
-    /**
-     * @return self
-     */
-    public function setPassword(): self
-    {
-        $this->password = $this->generateToken(self::PASSWORD_LENGTH, 'password');
-        return $this;
-    }
-
-    /**
-     * @param string|null $ip_addresses
-     * @return self
-     */
-    public function setIpAddresses(?string $ip_addresses = null): self
-    {
-        $this->ip_addresses = $ip_addresses;
-        return $this;
+        return $this->generateToken(self::PASSWORD_LENGTH, 'password');
     }
 
     /**

@@ -108,8 +108,25 @@ class UserRole extends TableFactory
     }
 
     /**
-     * Getters
+     * @param array $data
+     * @return int|null
      */
+    public function add(array $data): ?int
+    {
+        if (!array_key_exists('created_at', $data) || !array_key_exists('updated_at', $data)) {
+            $currentDate = date("Y-m-d H:i:s", time());
+            if (!array_key_exists('created_at', $data)) {
+                $data['created_at'] = $currentDate;
+            }
+            if (!array_key_exists('updated_at', $data)) {
+                $data['updated_at'] = $currentDate;
+            }
+        }
+
+        self::getDatabase()->insert($this->getTable(), $data, true);
+
+        return self::getDatabase()->affected_rows() > 0 ? self::getDatabase()->insert_id() : null;
+    }
 
     /**
      * @return int
@@ -133,29 +150,5 @@ class UserRole extends TableFactory
     public function getName(): string
     {
         return $this->name;
-    }
-
-    /**
-     * Setters
-     */
-
-    /**
-     * @param int $user_id
-     * @return self
-     */
-    public function setUserId(int $user_id): self
-    {
-        $this->user_id = $user_id;
-        return $this;
-    }
-
-    /**
-     * @param int $role_id
-     * @return self
-     */
-    public function setRoleId(int $role_id): self
-    {
-        $this->role_id = $role_id;
-        return $this;
     }
 }

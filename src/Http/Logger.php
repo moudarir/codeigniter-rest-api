@@ -25,14 +25,7 @@ class Logger
      */
     public function add(array $data): bool
     {
-        $this->log_id = (new ApiKeyLog())
-            ->setKeyId($data['key_id'] ?? null)
-            ->setUriString()
-            ->setMethod($data['method'])
-            ->setIpAddress()
-            ->setAuthorized($data['authorized'])
-            ->create();
-
+        $this->log_id = (new ApiKeyLog())->add($data);
         return $this->log_id !== null;
     }
 
@@ -44,20 +37,8 @@ class Logger
     {
         if (!empty($data) && $this->getLogId() !== null) {
             $entity = new ApiKeyLog();
-            $updated = false;
 
-            if (array_key_exists('response_time', $data)) {
-                $entity->setResponseTime($data['response_time']);
-                $updated = true;
-            }
-            if (array_key_exists('response_code', $data)) {
-                $entity->setResponseCode($data['response_code']);
-                $updated = true;
-            }
-
-            if ($updated == true) {
-                return $entity->update($this->getLogId());
-            }
+            return $entity->edit($this->getLogId(), $data);
         }
 
         return false;

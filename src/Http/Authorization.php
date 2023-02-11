@@ -2,13 +2,16 @@
 
 namespace Moudarir\CodeigniterApi\Http;
 
+use DomainException;
+use Firebase\JWT\BeforeValidException;
+use Firebase\JWT\SignatureInvalidException;
+use InvalidArgumentException;
 use Moudarir\CodeigniterApi\Models\Api\ApiKey;
 use CI_Controller;
 use Exception;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use LogicException;
 use UnexpectedValueException;
 
 class Authorization
@@ -170,21 +173,25 @@ class Authorization
      */
     private function bearer(string $http_auth)
     {
-        $token = substr($http_auth, 7);
-
         try {
-            $authData = (array) JWT::decode($token, new Key(getenv("JWT_SECRET"), 'HS256'));
+            $token = substr($http_auth, 7);
+            $secret = getenv("JWT_SECRET");
+            $secret !== false || $secret = $this->config['jwt_secret'];
+            $authData = (array) JWT::decode($token, new Key($secret, 'HS256'));
             $this->auth_data = (array) $authData;
             $this->authorized = true;
-        } catch (LogicException $e) {
-            // errors having to do with environmental setup or malformed JWT Keys
+        } catch (InvalidArgumentException $e) {
+            throw new Exception($this->ci->lang->line('rest_jwt_internal_server_error'), Config::HTTP_INTERNAL_ERROR);
+        } catch (DomainException $e) {
+            throw new Exception($this->ci->lang->line('rest_jwt_internal_server_error'), Config::HTTP_INTERNAL_ERROR);
+        } catch (SignatureInvalidException $e) {
+            throw new Exception($this->ci->lang->line('rest_jwt_signature_verification_failed'), Config::HTTP_UNAUTHORIZED);
+        } catch (BeforeValidException $e) {
             throw new Exception($e->getMessage(), Config::HTTP_UNAUTHORIZED);
         } catch (ExpiredException $e) {
-            // provided JWT is trying to be used after "exp" claim.
-            throw new Exception($this->ci->lang->line('rest_expired_jwt_token'), Config::HTTP_UNAUTHORIZED);
+            throw new Exception($this->ci->lang->line('rest_jwt_expired_token'), Config::HTTP_UNAUTHORIZED);
         } catch (UnexpectedValueException $e) {
-            // errors having to do with JWT signature and claims
-            throw new Exception($e->getMessage(), Config::HTTP_UNAUTHORIZED);
+            throw new Exception($this->ci->lang->line('rest_jwt_auth_failed'), Config::HTTP_UNAUTHORIZED);
         }
     }
 

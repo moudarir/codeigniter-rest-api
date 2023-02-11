@@ -158,6 +158,16 @@ $config['reasons_field_name'] = 'reasons';
 $config['api_key_name'] = 'X-API-KEY';
 
 /**
+ * JWT secret password
+ *
+ * If Authentication is enabled and Authorization type is "Bearer"
+ * then the environment variable getenv('JWT_SECRET') is used
+ * to sign the token sent. If the env variable not set then this
+ * param is used.
+ */
+$config['jwt_secret'] = '';
+
+/**
  * IP Whitelist
  *
  * Limit connections to your REST server with a comma separated list of IP addresses

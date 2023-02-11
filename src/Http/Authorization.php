@@ -6,7 +6,7 @@ use DomainException;
 use Firebase\JWT\BeforeValidException;
 use Firebase\JWT\SignatureInvalidException;
 use InvalidArgumentException;
-use Moudarir\CodeigniterApi\Models\Api\ApiKey;
+use Moudarir\CodeigniterApi\Models\ApiKey;
 use CI_Controller;
 use Exception;
 use Firebase\JWT\ExpiredException;
@@ -28,9 +28,9 @@ class Authorization
     private static Request $request;
 
     /**
-     * @var ApiKey|null
+     * @var array|null
      */
-    private ?ApiKey $apiKey = null;
+    private ?array $apiKey = null;
 
     /**
      * @var array
@@ -100,18 +100,18 @@ class Authorization
     }
 
     /**
-     * @return ApiKey|null
+     * @return array|null
      */
-    public function getApiKey(): ?ApiKey
+    public function getApiKey(): ?array
     {
         return $this->apiKey ?? null;
     }
 
     /**
-     * @param ApiKey|null $apiKey
+     * @param array|null $apiKey
      * @return self
      */
-    private function setApiKey(?ApiKey $apiKey = null): self
+    private function setApiKey(?array $apiKey = null): self
     {
         $this->apiKey = $apiKey;
         return $this;
@@ -152,9 +152,9 @@ class Authorization
 
             // If "is private key" is enabled, compare the ip address with the list
             // of valid ip addresses stored in the database
-            if ($apiKey->getIpAddresses() !== null) {
+            if ($apiKey['ip_addresses'] !== null) {
                 // multiple ip addresses must be separated using a comma
-                $ipaList = explode(',', $apiKey->getIpAddresses());
+                $ipaList = explode(',', $apiKey['ip_addresses']);
                 $ipAddress = $this->ci->input->ip_address();
                 $ips = array_filter($ipaList, fn ($ipa) => (trim($ipa) === $ipAddress));
 

@@ -4,7 +4,6 @@ namespace Moudarir\CodeigniterApi\Http;
 
 use CI_Controller;
 use Exception;
-use Moudarir\CodeigniterApi\Models\Api\ApiKey;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
 
@@ -44,9 +43,9 @@ class Server extends CI_Controller
     private ?Logger $logger = null;
 
     /**
-     * @var ApiKey|null
+     * @var array|null
      */
-    private ?ApiKey $api_key = null;
+    private ?array $api_key = null;
 
     /**
      * Server constructor.
@@ -103,7 +102,7 @@ class Server extends CI_Controller
                     if ($auth->isAuthorized() === false) {
                         if ($this->api_config['enable_logging']) {
                             $data = [
-                                'key_id' => $auth->getApiKey() !== null ? $auth->getApiKey()->getId() : null,
+                                'key_id' => $auth->getApiKey() !== null ? $auth->getApiKey()['id'] : null,
                                 'method' => self::getRequest()->getMethod(),
                                 'authorized' => 0,
                             ];
@@ -122,7 +121,7 @@ class Server extends CI_Controller
 
                         if ($this->api_config['enable_logging']) {
                             $data = [
-                                'key_id' => $auth->getApiKey() !== null ? $auth->getApiKey()->getId() : null,
+                                'key_id' => $auth->getApiKey() !== null ? $auth->getApiKey()['id'] : null,
                                 'method' => self::getRequest()->getMethod(),
                                 'authorized' => 1,
                             ];
@@ -187,9 +186,9 @@ class Server extends CI_Controller
     }
 
     /**
-     * @return ApiKey|null
+     * @return array|null
      */
-    public function getApiKey(): ?ApiKey
+    public function getApiKey(): ?array
     {
         return $this->api_key ?? null;
     }

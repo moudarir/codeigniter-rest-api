@@ -2,7 +2,7 @@
 
 namespace Moudarir\CodeigniterApi\Http;
 
-use Moudarir\CodeigniterApi\Models\Api\ApiKeyLog;
+use Moudarir\CodeigniterApi\Models\ApiKeyLog;
 
 class Logger
 {

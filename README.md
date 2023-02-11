@@ -56,6 +56,7 @@ You can find the file associated with your language in the `application/language
 
 - English
 - French
+- Arabic
 
 **Some changes to perform**
 
@@ -146,7 +147,7 @@ class CoreApi extends Server
 
 Execute the `dumping/queries.sql` file to create the tables needed for the API to work properly.
 
-Tables that will be created are `users`, `roles`, `users_roles`, `api_keys` and `api_key_logs`.
+Tables that will be created are `users`, `api_keys` and `api_key_logs`.
 
 You're now ready to begin using the library 👌.
 
@@ -203,26 +204,14 @@ And now, we can create our `application/controllers/Users.php` controller:
 defined('BASEPATH') || exit('No direct script access allowed');
 
 use Firebase\JWT\JWT;
-use Moudarir\CodeigniterApi\Http\Helpers;
-use Moudarir\CodeigniterApi\Models\Api\ApiKey;
-use Moudarir\CodeigniterApi\Models\Users\User;
-use Moudarir\CodeigniterApi\Models\Users\UserRole;
+use Moudarir\CodeigniterApi\Models\ApiKey;
+use Moudarir\CodeigniterApi\Models\User;
 
 /**
  * @property Users
  */
 class Users extends CoreApi
 {
-    /**
-     * Based from 'roles' table
-     * @var array
-     */
-    private array $roles = [
-        'moderator' => 1,
-        'admin' => 2,
-        'super' => 3,
-        'member' => 4,
-    ];
 
     /**
      * ApiUsers constructor.
@@ -238,8 +227,6 @@ class Users extends CoreApi
     public function indexGet()
     {
         $id = $this->get('id');
-        $with = $this->get('with');
-        $options = Helpers::formatApiWith($with);
         $entity = new User();
 
         if ($id !== null) {
@@ -247,21 +234,24 @@ class Users extends CoreApi
                 self::getResponse()->badRequest();
             }
 
-            $item = $entity->find($id, $options);
+            $item = $entity->find($id);
 
             if ($item === null) {
                 self::getResponse()->notFound();
             }
 
-            self::getResponse()->ok(['item' => $item->normalize()]);
+            self::getResponse()->ok(['item' => $item]);
         }
 
+        
+        $options = [
+            'page' => $this->get('page'),
+            'limit' => $this->get('limit')
+        ];
         $total = $entity->count($options);
-        $options['page'] = $this->get('page');
-        $options['limit'] = $this->get('limit');
         $response = [
             'total' => $total,
-            'items' => $total === 0 ? [] : $entity->normalizeAll($entity->all($options)),
+            'items' => $total === 0 ? [] : $entity->all($options),
         ];
 
         if ($options['page'] !== null) {
@@ -293,64 +283,52 @@ class Users extends CoreApi
             self::getResponse()->error($errors);
         }
 
-        $entity = new User();
         $hashedPassword = password_hash($post['password'], PASSWORD_ARGON2I, [
             'memory_cost' => 1 << 12, // 4MB
             'time_cost' => 2,
             'threads' => 2
         ]);
-        $entity::getDatabase()->trans_start();
+        $this->db->trans_start();
         $data = [
             'firstname' => $post['firstname'],
             'lastname' => $post['lastname'],
             'email' => $post['email'],
             'password' => $hashedPassword,
         ];
-        $user_id = $entity->add($data);
+        $user_id = (new User())->add($data);
 
         if ($user_id === null) {
-            $entity::getDatabase()->trans_rollback();
-            self::getResponse()->error("Error occurred during account creation.");
-        }
-
-        $urData = [
-            'user_id' => $user_id,
-            'role_id' => $this->roles[$post['role']],
-        ];
-        $user_role_id = (new UserRole())->add($urData);
-
-        if ($user_role_id === null) {
-            $entity::getDatabase()->trans_rollback();
+            $this->db->trans_rollback();
             self::getResponse()->error("Error occurred during account creation.");
         }
 
         $akEntity = new ApiKey();
-        $data = [
+        $akData = [
             'user_id' => $user_id,
             'key' => $akEntity->setKey(),
             'username' => $akEntity->setUsername(),
             'password' => $akEntity->setPassword(),
         ];
-        $api_key_id = $akEntity->add($data);
+        $api_key_id = $akEntity->add($akData);
 
         if ($api_key_id === null) {
-            $entity::getDatabase()->trans_rollback();
+            $this->db->trans_rollback();
             self::getResponse()->error("Error occurred during account creation.");
         }
 
-        if ($entity::getDatabase()->trans_status() === false) {
-            $entity::getDatabase()->trans_rollback();
+        if ($this->db->trans_status() === false) {
+            $this->db->trans_rollback();
         } else {
-            $entity::getDatabase()->trans_commit();
+            $this->db->trans_commit();
         }
 
         self::getResponse()->ok([
             'message' => "User account created successfully.",
             'data' => [
-                'user_id' => $data['user_id'],
-                'api_key' => $data['key'],
-                'username' => $data['username'],
-                'password' => $data['password'],
+                'user_id' => $akData['user_id'],
+                'api_key' => $akData['key'],
+                'username' => $akData['username'],
+                'password' => $akData['password'],
             ]
         ]);
     }
@@ -375,7 +353,7 @@ class Users extends CoreApi
     {
         $secret = getenv("JWT_SECRET");
         $secret !== false || $secret = $this->getApiConfig()['jwt_secret'];
-        $user = (new User())->find($this->getApiKey()->getUserId(), ['role' => true]);
+        $user = (new User())->find($this->getApiKey()['user_id']);
         $payload = [
             'iss' => 'http://example.org',
             'aud' => 'http://example.com',
@@ -383,11 +361,10 @@ class Users extends CoreApi
             'nbf' => 1357000000,
             'exp' => time() + (60 * 60),
             'user' => [
-                'user_id' => $user->getId(),
-                'firstname' => $user->getFirstname(),
-                'lastname' => $user->getLastname(),
-                'email' => $user->getEmail(),
-                'role' => $user->getUserRole()->getName(),
+                'user_id' => $user['id'],
+                'firstname' => $user['firstname'],
+                'lastname' => $user['lastname'],
+                'email' => $user['email'],
             ]
         ];
         self::getResponse()->ok([

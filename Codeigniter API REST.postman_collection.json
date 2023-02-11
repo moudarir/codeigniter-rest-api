@@ -159,12 +159,6 @@
 							],
 							"query": [
 								{
-									"key": "with[]",
-									"value": "role",
-									"description": "Optional",
-									"disabled": true
-								},
-								{
 									"key": "format",
 									"value": "xml",
 									"description": "Optional",
@@ -211,12 +205,6 @@
 							],
 							"query": [
 								{
-									"key": "with[]",
-									"value": "role",
-									"description": "Optional",
-									"disabled": true
-								},
-								{
 									"key": "format",
 									"value": "xml",
 									"description": "Optional",
@@ -254,12 +242,6 @@
 								"{{endpoint}}users"
 							],
 							"query": [
-								{
-									"key": "with[]",
-									"value": "role",
-									"description": "Optional",
-									"disabled": true
-								},
 								{
 									"key": "page",
 									"value": "2",
@@ -321,12 +303,6 @@
 								"{{endpoint}}users"
 							],
 							"query": [
-								{
-									"key": "with[]",
-									"value": "role",
-									"description": "Optional",
-									"disabled": true
-								},
 								{
 									"key": "page",
 									"value": "2",

@@ -60,16 +60,35 @@ class ApiKey extends CI_Model
         if (!empty($config['key'])) {
             $this->db->where('`ak`.`key`', $config['key'], true);
         }
-        if ($config['username'] !== null && $config['username'] !== '') {
+        if (!empty($config['username'])) {
             $this->db->where('`ak`.`username`', $config['username'], true);
         }
-        if ($config['password'] !== null && $config['password'] !== '') {
+        if (!empty($config['password'])) {
             $this->db->where('`ak`.`password`', $config['password'], true);
         }
 
         $query = $this->db->limit(1)->get();
 
         return ($query !== false && $query->num_rows() > 0) ? $query->row_array() : null;
+    }
+
+    /**
+     * @param string $username
+     * @param string $password
+     * @param string|null $key
+     * @return array|null
+     */
+    public function verify(string $username, string $password, ?string $key = null): ?array
+    {
+        if (empty($username) || empty($password)) {
+            return null;
+        }
+
+        return $this->find(null, [
+            'username' => $username,
+            'password' => $password,
+            'key' => $key,
+        ]);
     }
 
     /**

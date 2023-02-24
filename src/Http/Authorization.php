@@ -6,7 +6,6 @@ use DomainException;
 use Firebase\JWT\BeforeValidException;
 use Firebase\JWT\SignatureInvalidException;
 use InvalidArgumentException;
-use Moudarir\CodeigniterApi\Models\ApiKey;
 use CI_Controller;
 use Exception;
 use Firebase\JWT\ExpiredException;
@@ -135,16 +134,26 @@ class Authorization
             throw new Exception($this->ci->lang->line('rest_empty_username_or_password'), Config::HTTP_UNAUTHORIZED);
         }
 
-        $options = [
-            'username' => $username,
-            'password' => $password,
-        ];
+        $basicAuthClass = $this->config['api_key_auth_basic_class'];
 
-        if ($this->config['enable_api_key'] === true) {
-            $options['key'] = $key;
+        if (!class_exists($basicAuthClass)) {
+            throw new Exception("The Basic Authorization class not exists.", Config::HTTP_INTERNAL_ERROR);
         }
 
-        $apiKey = (new ApiKey())->find(null, $options);
+        $basicAuthMethod = $this->config['api_key_auth_basic_method'];
+        if (!method_exists($basicAuthClass, $basicAuthMethod)) {
+            throw new Exception("The Basic Authorization method not exists.", Config::HTTP_INTERNAL_ERROR);
+        }
+
+        $arguments = [$username, $password];
+
+        if ($this->config['enable_api_key'] === true) {
+            $arguments[] = $key;
+        }
+
+        $authClass = new $basicAuthClass();
+        // Call the controller method and passed arguments
+        $apiKey = call_user_func_array([$authClass, $basicAuthMethod], $arguments);
 
         if ($apiKey !== null) {
             $this->authorized = true;

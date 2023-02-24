@@ -158,6 +158,20 @@ $config['reasons_field_name'] = 'reasons';
 $config['api_key_name'] = 'X-API-KEY';
 
 /**
+ * Basic Auth class name
+ *
+ * Used in basic Authorization Type
+ */
+$config['api_key_auth_basic_class'] = \Moudarir\CodeigniterApi\Models\ApiKey::class;
+
+/**
+ * Basic Auth method name
+ *
+ * Used in basic Authorization Type
+ */
+$config['api_key_auth_basic_method'] = 'verify';
+
+/**
  * JWT secret password
  *
  * If Authentication is enabled and Authorization type is "Bearer"
@@ -219,7 +233,7 @@ $config['cors_allowed_headers'] = [
  * If using CORS checks, always include the headers and values specified
  * here in the OPTIONS client preflight.
  */
-$config['cors_forced_headers'] = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'];
+$config['cors_forced_headers'] = ['Access-Control-Allow-Credentials' => 'true'];
 
 /**
  * CORS Allowable Domains

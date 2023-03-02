@@ -22,6 +22,8 @@ CREATE TABLE `api_keys`(
   `key` binary(40) NOT NULL,
   `username` binary(8) NOT NULL,
   `password` binary(16) NOT NULL,
+  `limits` int UNSIGNED DEFAULT NULL COMMENT 'NULL = No limits',
+  `reset_limits_after` tinyint UNSIGNED DEFAULT NULL COMMENT 'In hours',
   `ip_addresses` varchar(191) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -31,8 +33,21 @@ CREATE TABLE `api_keys`(
   UNIQUE KEY `username` (`username`)
 ) ENGINE=InnoDB;
 
-INSERT INTO `api_keys` (`id`, `user_id`, `key`, `username`, `password`, `created_at`, `updated_at`) VALUES
-(1, 1, 'dGCJ31e4MAxvspiOTq6fYPIKNQH7URyaEhrwB8bW', 'ygNSiCoJ', 'xQ3xZEs3qkitdxRF', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+INSERT INTO `api_keys` (`id`, `user_id`, `key`, `username`, `password`, `limits`, `reset_limits_after`, `created_at`, `updated_at`) VALUES
+(1, 1, 'dGCJ31e4MAxvspiOTq6fYPIKNQH7URyaEhrwB8bW', 'ygNSiCoJ', 'xQ3xZEs3qkitdxRF', NULL, NULL, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+
+CREATE TABLE `api_key_limits` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `key_id` int UNSIGNED NOT NULL,
+  `request` varchar(100) NOT NULL,
+  `counter` int UNSIGNED NOT NULL,
+  `started_at` int UNSIGNED NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `key_id` (`key_id`),
+  CONSTRAINT `api_key_limits_api_keys_fk1` FOREIGN KEY (`key_id`) REFERENCES `api_keys` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE=InnoDB;
 
 CREATE TABLE `api_key_logs`(
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,

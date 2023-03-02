@@ -38,6 +38,13 @@ $config['enable_authentication'] = true;
 $config['enable_api_key'] = true;
 
 /**
+ * Enable Request Limits
+ *
+ * Used only if Authentication is enabled
+ */
+$config['enable_limits'] = false;
+
+/**
  * IP Whitelist
  *
  * Limit connections to your REST server with a comma separated list of IP addresses
@@ -156,6 +163,26 @@ $config['reasons_field_name'] = 'reasons';
  * 2012/06/12. See RFC 6648 specification for more details
  */
 $config['api_key_name'] = 'X-API-KEY';
+
+/**
+ * API Limits type
+ *
+ * Specify the type used to limit the API calls
+ *
+ * Available types are:
+ * IP_ADDRESS    Check a limit per ip address
+ * API_KEY       Check a limit per api key
+ * METHOD_NAME   Check a limit on method calls
+ * ROUTED_URL    Check a limit on the routed URL. Default
+ */
+$config['limits_type'] = 'ROUTED_URL';
+
+/**
+ * API Limits Timeout
+ *
+ * Default 1 Hour
+ */
+$config['default_limits_timeout'] = 60 * 60;
 
 /**
  * Basic Auth class name

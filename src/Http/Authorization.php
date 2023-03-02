@@ -11,6 +11,7 @@ use Exception;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Moudarir\CodeigniterApi\Models\ApiKeyLimit;
 use UnexpectedValueException;
 
 class Authorization
@@ -80,6 +81,85 @@ class Authorization
         if (strpos(strtolower($http_auth), 'bearer') === 0) {
             $this->bearer($http_auth);
         }
+    }
+
+    /**
+     * Check if the requests to a controller method exceed a limit.
+     *
+     * @param string $controllerMethod The method being called
+     * @return bool TRUE the call limit is below the threshold; otherwise, FALSE
+     */
+    public function checkLimits(string $controllerMethod): bool
+    {
+        $apiKey = $this->getApiKey();
+
+        if ($apiKey['limits'] === null) {
+            // Everything is fine
+            return true;
+        }
+
+        $keyId = $apiKey['id'];
+
+        switch ($this->config['limits_type']) {
+            case 'IP_ADDRESS':
+                $request = 'ip:' . $this->ci->input->ip_address();
+                break;
+            case 'API_KEY':
+                $request = 'api-key:' . $keyId;
+                break;
+            case 'METHOD_NAME':
+                $request = 'method:' . $controllerMethod;
+                break;
+            case 'ROUTED_URL':
+            default:
+                $uri = $this->ci->uri->ruri_string();
+                if (strpos(strrev($uri), strrev(self::$request->getOutputFormat())) === 0) {
+                    $uri = substr($uri, 0, -strlen(self::$request->getOutputFormat()) - 1);
+                }
+
+                // It's good to differentiate GET from PUT
+                $request = 'uri:' . $uri . ':' . self::$request->getMethod();
+                break;
+        }
+
+        // Get data about a keys' usage and limit to one row
+        $entity = new ApiKeyLimit();
+        $apiLimit = $entity->find(null, ['key_id' => $keyId, 'request' => $request]);
+
+        // No calls have been made for this key
+        if ($apiLimit === null) {
+            // Create a new row for the following key
+            $limitId = $entity->add([
+                'key_id' => $keyId,
+                'request' => $request,
+                'counter' => 1,
+                'started_at' => time()
+            ]);
+            return $limitId !== null;
+        }
+
+        // Been a time limit (or by default an hour) since they called
+        // How many times can you get to this method in a defined limits_timeout (default: 1 hour)?
+        $limitsTimeout = (int)$apiKey['reset_limits_after'] > 0
+            ? ((int)$apiKey['reset_limits_after'] * $this->config['default_limits_timeout'])
+            : $this->config['default_limits_timeout'];
+
+        if ((int)$apiLimit['started_at'] < (time() - $limitsTimeout)) {
+            // Reset the started period and counter
+            return $entity->edit($apiLimit['id'], [
+                'counter' => 1,
+                'started_at' => time()
+            ]);
+        }
+
+        // They have called within the hour, so lets update
+        // The limit has been exceeded
+        if ((int)$apiLimit['counter'] >= (int)$apiKey['limits']) {
+            return false;
+        }
+
+        // Increase the counter by one
+        return $entity->increaseCounter($apiLimit['id']);
     }
 
     /**

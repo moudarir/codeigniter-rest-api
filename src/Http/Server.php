@@ -92,43 +92,6 @@ class Server extends CI_Controller
                 if (!isset(self::$response)) {
                     self::$response = new Response($this->api_config, self::$request ?? null, $this->logger);
                 }
-
-                // Checking for keys? GET TO WorK!
-                if ($this->api_config['enable_authentication'] === true) {
-                    $auth = new Authorization($this->api_config, self::$request);
-                    $auth->check();
-
-                    // They provided a key, but it wasn't valid, so get them out of here
-                    if ($auth->isAuthorized() === false) {
-                        if ($this->api_config['enable_logging']) {
-                            $data = [
-                                'key_id' => $auth->getApiKey() !== null ? $auth->getApiKey()['id'] : null,
-                                'method' => self::getRequest()->getMethod(),
-                                'authorized' => 0,
-                            ];
-                            $this->logger->add($data);
-                        }
-
-                        // fix cross site to option request error
-                        if (self::getRequest()->getMethod() === 'options') {
-                            exit();
-                        }
-
-                        self::getResponse()->unauthorized();
-                    } else {
-                        $this->api_key = $auth->getApiKey();
-                        $this->auth_data = $auth->getAuthData();
-
-                        if ($this->api_config['enable_logging']) {
-                            $data = [
-                                'key_id' => $auth->getApiKey() !== null ? $auth->getApiKey()['id'] : null,
-                                'method' => self::getRequest()->getMethod(),
-                                'authorized' => 1,
-                            ];
-                            $this->logger->add($data);
-                        }
-                    }
-                }
             } catch (Exception $e) {
                 (new Response($this->api_config))->response([
                     $this->api_config['error_field_name']   => true,
@@ -153,13 +116,23 @@ class Server extends CI_Controller
     }
 
     /**
+     *
+     * @see mapping()
+     * @param string $object_called
+     * @param array $arguments The arguments passed to the controller method
+     */
+    public function _remap(string $object_called, array $arguments = [])
+    {
+        $this->mapping($object_called, $arguments);
+    }
+
+    /**
      * Requests are not made to methods directly, the request will be for
      * an "object". This simply maps the object and method to the correct
      * Controller method.
      *
      * @param string $object_called
      * @param array $arguments The arguments passed to the controller method
-     * @throws Exception
      */
     public function mapping(string $object_called, array $arguments = [])
     {
@@ -179,6 +152,59 @@ class Server extends CI_Controller
         // Sure it exists, but can they do anything with it?
         if (!method_exists($this, $controllerMethod)) {
             self::getResponse()->methodNotAllowed($this->lang->line('rest_unknown_path'));
+        }
+
+        // Checking for keys? GET TO WorK!
+        if ($this->api_config['enable_authentication'] === true) {
+            try {
+                $auth = new Authorization($this->api_config, self::$request);
+                $auth->check();
+
+                // They provided a key, but it wasn't valid, so get them out of here
+                if ($auth->isAuthorized() === false) {
+                    if ($this->api_config['enable_logging']) {
+                        $data = [
+                            'key_id' => $auth->getApiKey() !== null ? $auth->getApiKey()['id'] : null,
+                            'method' => self::getRequest()->getMethod(),
+                            'authorized' => 0,
+                        ];
+                        $this->logger->add($data);
+                    }
+
+                    // fix cross site to option request error
+                    if (self::getRequest()->getMethod() === 'options') {
+                        exit();
+                    }
+
+                    self::getResponse()->unauthorized();
+                } else {
+                    $this->api_key = $auth->getApiKey();
+                    $this->auth_data = $auth->getAuthData();
+                    $authorized = true;
+
+                    if ($this->api_config['enable_limits'] === true) {
+                        $authorized = $auth->checkLimits($controllerMethod);
+                    }
+
+                    if ($this->api_config['enable_logging'] === true) {
+                        $data = [
+                            'key_id' => $auth->getApiKey() !== null ? $auth->getApiKey()['id'] : null,
+                            'method' => self::getRequest()->getMethod(),
+                            'authorized' => $authorized === true ? 1 : 0,
+                        ];
+                        $this->logger->add($data);
+                    }
+
+                    if ($authorized === false) {
+                        self::getResponse()->unauthorized($this->lang->line('rest_api_request_limits_exceeded'));
+                    }
+                }
+            } catch (Exception $e) {
+                self::getResponse()->response([
+                    $this->api_config['error_field_name']   => true,
+                    $this->api_config['message_field_name'] => $e->getMessage()
+                ], $e->getCode());
+            }
         }
 
         // Call the controller method and passed arguments

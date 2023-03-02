@@ -8,6 +8,7 @@ $lang['rest_ip_blacklist'] = "Denied IP address.";
 $lang['rest_not_found'] = "Not found.";
 $lang['rest_api_key_not_found'] = "API key is missing.";
 $lang['rest_api_ip_address_denied'] = "Unauthorized IP address.";
+$lang['rest_api_request_limits_exceeded'] = "The request limits exceeded for this resource.";
 $lang['rest_empty_username_or_password'] = "Connection error.";
 $lang['rest_auth_key_not_found'] = "Bearer token key is missing.";
 $lang['rest_jwt_expired_token'] = "Token key was expired.";

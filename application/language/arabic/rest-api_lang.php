@@ -8,6 +8,7 @@ $lang['rest_ip_blacklist'] = "عنوان IP مرفوض";
 $lang['rest_not_found'] = "غير موجود";
 $lang['rest_api_key_not_found'] = "مفتاح API مفقود";
 $lang['rest_api_ip_address_denied'] = "عنوان IP غير مسموح به";
+$lang['rest_api_request_limits_exceeded'] = "تم تجاوز حدود الطلب لهذا المورد";
 $lang['rest_empty_username_or_password'] = "خطأ في الإتصال";
 $lang['rest_auth_key_not_found'] = "مفتاح الرمز غير موجود";
 $lang['rest_jwt_expired_token'] = "انتهت صلاحية مفتاح الرمز المميز";

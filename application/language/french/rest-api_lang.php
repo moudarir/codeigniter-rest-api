@@ -8,6 +8,7 @@ $lang['rest_ip_blacklist'] = "Adresse IP refusée.";
 $lang['rest_not_found'] = "Enregistrement introuvable.";
 $lang['rest_api_key_not_found'] = "Clé API manquante.";
 $lang['rest_api_ip_address_denied'] = "Adresse IP non autorisée.";
+$lang['rest_api_request_limits_exceeded'] = "La limite de requêtes dépassées pour cette ressource.";
 $lang['rest_empty_username_or_password'] = "Erreur de connexion.";
 $lang['rest_auth_key_not_found'] = "Clé du jeton manquante.";
 $lang['rest_jwt_expired_token'] = "Clé du jeton expirée.";

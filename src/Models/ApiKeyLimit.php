@@ -2,108 +2,108 @@
 
 namespace Moudarir\CodeigniterApi\Models;
 
-use CI_Model;
+use Moudarir\CodeigniterApi\Helpers\Carbonize;
 
-class ApiKeyLimit extends CI_Model
+class ApiKeyLimit extends Model
 {
 
-    /**
-     * ApiKeyLimit constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
+    public int $key_id;
 
-    /**
-     * @param int|null $id
-     * @param array|null $options
-     * @return array|null
-     */
-    public function find(?int $id = null, ?array $options = null): ?array
+    public string $request;
+
+    public int $counter;
+
+    public int $started_at;
+
+    protected string $table = 'api_key_limits';
+
+    protected string $alias = 'akl';
+
+    public function find(?int $id = null, ?array $options = null): ?self
     {
-        if ((int)$id <= 0 && $options === null) {
+        if ((int)$id <= 0 && empty($options)) {
             return null;
         }
 
         $default = [
             'key_id' => null,
-            'request' => null
+            'request' => null,
         ];
-        $config = is_array($options) ? array_merge($default, $options) : $default;
-        $this->db->select('`akl`.*')->from('`api_key_limits` `akl`');
+        $config = $this->setOptions($default, $options);
+        $param = [];
 
         if ((int)$id > 0) {
-            $this->db->where('`akl`.`id`', (int)$id, true);
+            $param['where']['`'.$this->alias.'`.`id`'] = (int)$id;
         }
         if ((int)$config['key_id'] > 0) {
-            $this->db->where('`akl`.`key_id`', (int)$config['key_id'], true);
+            $param['where']['`'.$this->alias.'`.`key_id`'] = (int)$config['key_id'];
         }
         if (!empty($config['request'])) {
-            $this->db->where('`akl`.`request`', $config['request'], true);
+            $param['where']['`'.$this->alias.'`.`request`'] = $config['request'];
         }
 
-        $query = $this->db->limit(1)->get();
+        return $this->findOne($param);
+    }
 
-        return ($query !== false && $query->num_rows() > 0) ? $query->row_array() : null;
+    public function reset(?int $timestamp = null): bool
+    {
+        return $this->setCounter()->setStartedAt($timestamp)->setUpdatedAt()->update();
+    }
+
+    public function increaseCounter(): bool
+    {
+        return $this->setCounter($this->getCounter() + 1)->setUpdatedAt()->update();
     }
 
     /**
-     * @param array $data
-     * @return int|null
+     * Getters
      */
-    public function add(array $data): ?int
+
+    public function getKeyId(): int
     {
-        if (!array_key_exists('created_at', $data) || !array_key_exists('updated_at', $data)) {
-            $currentDate = date("Y-m-d H:i:s", time());
-            if (!array_key_exists('created_at', $data)) {
-                $data['created_at'] = $currentDate;
-            }
-            if (!array_key_exists('updated_at', $data)) {
-                $data['updated_at'] = $currentDate;
-            }
-        }
+        return $this->key_id;
+    }
 
-        $this->db->insert('`api_key_limits`', $data, true);
+    public function getRequest(): string
+    {
+        return $this->request;
+    }
 
-        return $this->db->affected_rows() > 0 ? $this->db->insert_id() : null;
+    public function getCounter(): int
+    {
+        return $this->counter;
+    }
+
+    public function getStartedAt(): int
+    {
+        return $this->started_at;
     }
 
     /**
-     * @param int $id
-     * @param array $data
-     * @return bool
+     * Setters
      */
-    public function edit(int $id, array $data): bool
+
+    public function setKeyId(int $key_id): self
     {
-        if (empty($data)) {
-            return false;
-        }
-
-        if (!array_key_exists('updated_at', $data)) {
-            $data['updated_at'] = date("Y-m-d H:i:s", time());
-        }
-
-        $this->db->where('id', $id, true);
-        $this->db->update('`api_key_limits`', $data);
-
-        return $this->db->affected_rows() === 1;
+        $this->key_id = $key_id;
+        return $this;
     }
 
-    /**
-     * @param int $id
-     * @return bool
-     */
-    public function increaseCounter(int $id): bool
+    public function setRequest(string $request): self
     {
-        if ($id > 0) {
-            $this->db->set('counter', 'counter+1', false);
-            $this->db->where('id', $id);
-            $this->db->update('`api_key_limits`');
+        $this->request = $request;
+        return $this;
+    }
 
-            return $this->db->affected_rows() > 0;
-        }
+    public function setCounter(int $counter = 1): self
+    {
+        $this->counter = $counter;
+        return $this;
+    }
 
-        return false;
+    public function setStartedAt(?int $started_at = null): self
+    {
+        $this->started_at = $started_at ?: (new Carbonize())->getTimestamp();
+        return $this;
     }
 }

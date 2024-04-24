@@ -2,82 +2,65 @@
 
 namespace Moudarir\CodeigniterApi\Models;
 
-use CI_Model;
-use Moudarir\CodeigniterApi\Http\Helpers;
+use Moudarir\CodeigniterApi\Helpers\CommonHelper;
 
-class ApiKey extends CI_Model
+class ApiKey extends Model
 {
 
-    /**
-     * API Key Length
-     */
+    public int $user_id;
+
+    public string $key;
+
+    public string $username;
+
+    public string $password;
+
+    public ?int $limits;
+
+    public ?int $reset_limits_after;
+
+    public ?string $ip_addresses;
+
+    protected string $table = 'api_keys';
+
+    protected string $alias = 'ak';
+
     const API_KEY_LENGTH = 40;
 
-    /**
-     * API Key Length
-     */
     const USERNAME_LENGTH = 8;
 
-    /**
-     * API Key Length
-     */
     const PASSWORD_LENGTH = 16;
 
-    /**
-     * ApiKey constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
-     * @param int|null $id
-     * @param array|null $options
-     * @return array|null
-     */
     public function find(?int $id = null, ?array $options = null): ?array
     {
-        if ((int)$id <= 0 && $options === null) {
+        if ((int)$id <= 0 && empty($options)) {
             return null;
         }
 
         $default = [
-            'user_id'  => null,
-            'key'      => null,
+            'key' => null,
             'username' => null,
             'password' => null,
         ];
-        $config = is_array($options) ? array_merge($default, $options) : $default;
-        $this->db->select('`ak`.*')->from('`api_keys` `ak`');
+        $config = $this->setOptions($default, $options);
+        $param = [];
 
         if ((int)$id > 0) {
-            $this->db->where('`ak`.`id`', (int)$id, true);
+            $param['where']['`'.$this->alias.'`.`id`'] = (int)$id;
         }
-        if ((int)$config['user_id'] > 0) {
-            $this->db->where('`ak`.`user_id`', (int)$config['user_id'], true);
+        if ($config['key'] !== null) {
+            $param['where']['`'.$this->alias.'`.`key`'] = $config['key'];
         }
-        if (!empty($config['key'])) {
-            $this->db->where('`ak`.`key`', $config['key'], true);
+        if ($config['username'] !== null) {
+            $param['where']['`'.$this->alias.'`.`username`'] = $config['username'];
         }
-        if (!empty($config['username'])) {
-            $this->db->where('`ak`.`username`', $config['username'], true);
-        }
-        if (!empty($config['password'])) {
-            $this->db->where('`ak`.`password`', $config['password'], true);
+        if ($config['password'] !== null) {
+            $param['where']['`'.$this->alias.'`.`password`'] = $config['password'];
         }
 
-        $query = $this->db->limit(1)->get();
-
-        return ($query !== false && $query->num_rows() > 0) ? $query->row_array() : null;
+        return $this->fetchOne($param);
     }
 
-    /**
-     * @param string $username
-     * @param string $password
-     * @param string|null $key
-     * @return array|null
-     */
     public function verify(string $username, string $password, ?string $key = null): ?array
     {
         if (empty($username) || empty($password)) {
@@ -92,73 +75,82 @@ class ApiKey extends CI_Model
     }
 
     /**
-     * @param array $data
-     * @return int|null
+     * Getters
      */
-    public function add(array $data): ?int
+
+    public function getKey(): string
     {
-        if (!array_key_exists('created_at', $data) || !array_key_exists('updated_at', $data)) {
-            $currentDate = date("Y-m-d H:i:s", time());
-            if (!array_key_exists('created_at', $data)) {
-                $data['created_at'] = $currentDate;
-            }
-            if (!array_key_exists('updated_at', $data)) {
-                $data['updated_at'] = $currentDate;
-            }
-        }
+        return $this->key;
+    }
 
-        $this->db->insert('`api_keys`', $data, true);
+    public function getUsername(): string
+    {
+        return $this->username;
+    }
 
-        return $this->db->affected_rows() > 0 ? $this->db->insert_id() : null;
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function getLimits(): ?int
+    {
+        return $this->limits;
+    }
+
+    public function getResetLimitsAfter(): ?int
+    {
+        return $this->reset_limits_after;
+    }
+
+    public function getIpAddresses(): ?string
+    {
+        return $this->ip_addresses;
     }
 
     /**
-     * @return string
+     * Setters
      */
-    public function setKey(): string
+
+    public function setUserId(int $user_id): self
     {
-        return $this->generateToken(self::API_KEY_LENGTH);
+        $this->user_id = $user_id;
+        return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function setUsername(): string
+    public function setKey(): self
     {
-        return $this->generateToken(self::USERNAME_LENGTH, 'username');
+        $this->key = $this->getUniqueToken('key', ['length' => self::API_KEY_LENGTH]);
+        return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function setPassword(): string
+    public function setUsername(): self
     {
-        return $this->generateToken(self::PASSWORD_LENGTH, 'password');
+        $this->username = $this->getUniqueToken('username', ['length' => self::USERNAME_LENGTH]);
+        return $this;
     }
 
-    /**
-     * @param int $length
-     * @param string $field
-     * @param array $exclude
-     * @return string
-     */
-    private function generateToken(int $length, string $field = 'key', array $exclude = []): string
+    public function setPassword(): self
     {
-        $token = Helpers::generateToken($length, 'alnum');
+        $this->password = CommonHelper::generateToken(self::PASSWORD_LENGTH);
+        return $this;
+    }
 
-        $this->db->where($field, $token);
+    public function setLimits(?int $limits = null): self
+    {
+        $this->limits = $limits;
+        return $this;
+    }
 
-        if (!empty($exclude)) {
-            $this->db->where_not_in($field, $exclude);
-        }
+    public function setResetLimitsAfter(?int $reset_limits_after = null): self
+    {
+        $this->reset_limits_after = $reset_limits_after;
+        return $this;
+    }
 
-        $found = $this->db->count_all_results('`api_keys`');
-
-        if ($found > 0) {
-            $exclude[] = $token;
-            return $this->generateToken($length, $field, $exclude);
-        }
-
-        return $token;
+    public function setIpAddresses(?string $ip_addresses = null): self
+    {
+        $this->ip_addresses = $ip_addresses;
+        return $this;
     }
 }

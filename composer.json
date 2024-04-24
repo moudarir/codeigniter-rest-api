@@ -1,13 +1,14 @@
 {
   "name": "moudarir/codeigniter-rest-api",
   "description": "Codeigniter 3 Rest API",
+  "version": "3.0.0",
   "type": "library",
   "license": "MIT",
   "authors": [
     {
       "name": "Abdessamad MOUDARIR",
       "email": "amoudarir@gmail.com",
-      "role": "Developer"
+      "role": "Lead Developer"
     }
   ],
   "require": {
@@ -15,7 +16,8 @@
     "ext-json": "*",
     "ext-libxml": "*",
     "ext-simplexml": "*",
-    "firebase/php-jwt": "^6.3"
+    "firebase/php-jwt": "^6.3",
+    "nesbot/carbon": "^2.72"
   },
   "autoload": {
     "psr-4" : {

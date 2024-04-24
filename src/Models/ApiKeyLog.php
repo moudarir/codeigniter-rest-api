@@ -2,65 +2,66 @@
 
 namespace Moudarir\CodeigniterApi\Models;
 
-use CI_Model;
-
-class ApiKeyLog extends CI_Model
+class ApiKeyLog extends Model
 {
 
-    /**
-     * ApiKeyLog constructor.
-     */
-    public function __construct()
+    public ?int $key_id;
+
+    public string $uri_string;
+
+    public string $method;
+
+    public string $ip_address;
+
+    public ?float $response_time;
+
+    public ?int $response_code;
+
+    public int $authorized;
+
+    protected string $table = 'api_key_logs';
+
+    protected string $alias = 'akl';
+
+    public function setKeyId(?int $key_id = null): self
     {
-        parent::__construct();
+        $this->key_id = $key_id;
+        return $this;
     }
 
-    /**
-     * @param array $data
-     * @return int|null
-     */
-    public function add(array $data): ?int
+    public function setUriString(): self
     {
-        if (!array_key_exists('created_at', $data) || !array_key_exists('updated_at', $data)) {
-            $currentDate = date("Y-m-d H:i:s", time());
-            if (!array_key_exists('created_at', $data)) {
-                $data['created_at'] = $currentDate;
-            }
-            if (!array_key_exists('updated_at', $data)) {
-                $data['updated_at'] = $currentDate;
-            }
-        }
-
-        if (!array_key_exists('uri_string', $data)) {
-            $data['uri_string'] = $this->uri->uri_string();
-        }
-        if (!array_key_exists('ip_address', $data)) {
-            $data['ip_address'] = $this->input->ip_address();
-        }
-
-        $this->db->insert('`api_key_logs`', $data, true);
-
-        return $this->db->affected_rows() > 0 ? $this->db->insert_id() : null;
+        $this->uri_string = $this->uri->uri_string();
+        return $this;
     }
 
-    /**
-     * @param int $id
-     * @param array $data
-     * @return bool
-     */
-    public function edit(int $id, array $data): bool
+    public function setMethod(string $method): self
     {
-        if (empty($data)) {
-            return false;
-        }
+        $this->method = $method;
+        return $this;
+    }
 
-        if (!array_key_exists('updated_at', $data)) {
-            $data['updated_at'] = date("Y-m-d H:i:s", time());
-        }
+    public function setIpAddress(): self
+    {
+        $this->ip_address = $this->input->ip_address();
+        return $this;
+    }
 
-        $this->db->where('id', $id, true);
-        $this->db->update('`api_key_logs`', $data);
+    public function setResponseTime(?float $response_time = null): self
+    {
+        $this->response_time = $response_time;
+        return $this;
+    }
 
-        return $this->db->affected_rows() === 1;
+    public function setResponseCode(?int $response_code = null): self
+    {
+        $this->response_code = $response_code;
+        return $this;
+    }
+
+    public function setAuthorized(int $authorized): self
+    {
+        $this->authorized = $authorized;
+        return $this;
     }
 }

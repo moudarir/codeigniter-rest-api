@@ -22,7 +22,7 @@ CREATE TABLE `api_keys`(
   `key` binary(40) NOT NULL,
   `username` binary(8) NOT NULL,
   `password` binary(16) NOT NULL,
-  `limits` int UNSIGNED DEFAULT NULL COMMENT 'NULL = No limits',
+  `limits` int UNSIGNED DEFAULT NULL COMMENT 'Total requests made. NULL = No limits',
   `reset_limits_after` tinyint UNSIGNED DEFAULT NULL COMMENT 'In hours',
   `ip_addresses` varchar(191) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,

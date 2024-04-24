@@ -1,30 +1,30 @@
 # Codeigniter 3 API Rest
-
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/moudarir/codeigniter-rest-api/blob/master/LICENSE)
+[![GitHub release (latest)](https://img.shields.io/github/v/release/moudarir/codeigniter-rest-api)](https://packagist.org/packages/moudarir/codeigniter-rest-api)
+[![GitHub license](https://img.shields.io/github/license/moudarir/codeigniter-rest-api)](https://github.com/moudarir/codeigniter-rest-api/blob/master/LICENSE)
 
 A RESTful server implementation for Codeigniter 3 based on [CodeIgniter RestServer](https://github.com/chriskacerguis/codeigniter-restserver "CodeIgniter RestServer")
 
-## Table of contents
+> **Break changes** made in version `3.0`. Full code refactoring and new route system implemented inspired from [Luthier CI](https://github.com/ingeniasoftware/luthier-ci "Luthier CI").
 
+## Table of contents
 1. [Requirements](#requirements)
 2. [Installation](#installation)
 3. [Implementation](#implementation)
 4. [Usage](#usage)
 5. [Postman collection](#postman-collection)
+6. [Todo](#todo)
 
-### Requirements
-
-- PHP:  `>=7.4`
-- Codeigniter: `^3.1.0`
+## Requirements
+- PHP: `7.4` to `8.2` tested.
+- Codeigniter: `^3.1.13`.
 - Composer
 
-### Installation
+## Installation
+> The current version `3.0.*` requires php 7.4 or higher ([php supported versions](http://php.net/supported-versions.php))
 
-> **N.B:** The current version `1.0.*` requires php 7.4 or higher ([php supported versions](http://php.net/supported-versions.php))
+This library uses [Composer](https://getcomposer.org/) to be installed.
 
-This library uses [Composer](https://getcomposer.org/)  to by installed.
-
-Run this command (recommended) in the same path as your `composer.json` file:
+Run this command line (recommended) in the same path as your `composer.json` file:
 
 ```bash
 composer require moudarir/codeigniter-rest-api
@@ -32,12 +32,15 @@ composer require moudarir/codeigniter-rest-api
 
 Or, In your `composer.json` file, add the following code in `require` section: 
 
-```json
-    {
-        "require": {
-          "moudarir/codeigniter-rest-api": "^1.0"
-        }
-    }
+```php
+{
+  ...
+  "require": {
+    ...
+    "moudarir/codeigniter-rest-api": "^3.0"
+  },
+  ...
+}
 ```
 
 And then run:
@@ -46,225 +49,135 @@ And then run:
 composer install
 ```
 
-### Implementation
+## Implementation
 
-**Language/Translation**
+### Language / Translation
+You can find the file associated with your language in the `application/language/` folder. Based on the `$config['language']` setting in your `[your-project]/application/config/config.php` configuration file.
 
-You can find the file associated with your language in the `application/languages/` folder. Based on the `$config['language']` setting in your `application/config/config.php` configuration file.
-
-*Supported languages:*
-
+### Supported languages
 - English
 - French
 - Arabic
 
-**Some changes to perform**
+### Files & Configuration
+The first thing to do is copying all required files in your CI project:
 
-The first thing to do is copy the `rest-api.php` configuration file into the `config` folder of your codeigniter application
+- `application/config/rest-api-server.php` => `[your-project]/application/config/rest-api-server.php` 
+- `application/controllers/DefaultController.php` => `[your-project]/application/controllers/DefaultController.php`
+- `application/language/*/rest-api-server_lang.php` => `[your-project]/application/language/*/rest-api-server_lang.php`
+- `application/routes/*` => `[your-project]/application/routes/*`
 
-> **Tip:** If you find that the default configuration works for you, then copying the configuration file is optional.
+> **DO NOT** change the `[your-project]/application/config/rest-api-server.php` and `[your-project]/application/language/*/rest-api-server_lang.php` filenames.
 
-Make sure that the `enable_hooks`, `subclass_prefix` and `composer_autoload`  keys in `application/config/config.php` file are set as following:
+Make sure that the `enable_hooks` and `composer_autoload` keys in `[your-project]/application/config/config.php` file are set as following:
 
 ```php
 $config['enable_hooks'] = true;
-$config['subclass_prefix'] = 'Core';
 $config['composer_autoload'] = true; // Or the path to 'autoload.php' file. Ex: APPPATH.'vendor/autoload.php'
 ```
 
-Next, append the following code to your `application/config/hooks.php` file:
+Next, set the following code in `[your-project]/application/config/hooks.php` file:
 
 ```php
-$hook['pre_system'][] = [
-    'class' => 'InitAppCore',
-    'function' => 'initialize',
-    'filename' => 'InitAppCore.php',
-    'filepath' => 'hooks'
-];
+$hook = \Moudarir\CodeigniterApi\Routes\Hook::initialize();
 ```
 
-Then, create a new file called `InitAppCore.php` in `application/hooks/` folder and put the following code:
-
+and in `[your-project]/application/config/routes.php` file:
 ```php
-<?php
-defined('BASEPATH') || exit('No direct script access allowed');
-
-/**
- * @property InitAppCore
- */
-class InitAppCore
-{
-
-    /**
-     * @return void
-     */
-    public function initialize(): void
-    {
-        spl_autoload_register([__CLASS__, 'customCores']);
-    }
-
-    /**
-     * @param string $class_name
-     */
-    public function customCores(string $class_name)
-    {
-        if (strpos($class_name, 'CI_') !== 0) {
-            $class_file = $class_name.'.php';
-            if (is_readable(APPPATH.'core'.DIRECTORY_SEPARATOR.$class_file)) {
-                require_once(APPPATH.'core'.DIRECTORY_SEPARATOR.$class_file);
-            }
-        }
-    }
-}
-
+$route = \Moudarir\CodeigniterApi\Routes\Router::getRoutes();
 ```
 
-And now, we can create a custom core class to use in our Controllers.
-
-Referring to `subclass_prefix` param, we should prefix the class name with `Core`, Ex: `/application/core/CoreApi.php`.
-
-```php
-<?php
-defined('BASEPATH') || exit('No direct script access allowed');
-
-use Moudarir\CodeigniterApi\Http\Server;
-
-class CoreApi extends Server
-{
-
-    /**
-     * CoreServer constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-}
-
-```
-
-**IMPORTANT**
-
+### Important
 Execute the `dumping/queries.sql` file to create the tables needed for the API to work properly.
 
-Tables that will be created are `users`, `api_keys` and `api_key_logs`.
+Tables that will be created are `users`, `api_keys`, `api_key_limits` and `api_key_logs`.
 
 You're now ready to begin using the library 👌.
 
-**A word about controller methods and requests**
+### About Routes
+The implementation of old routes is deprecated. The routes are now simplified for best use. See [Usage](#usage).
 
-Basicly, There is a relationship between `controller method` and `request method`.
-
-If you send a `GET` request, the controller method **MUST BE** named as `indexGet`
-
-Request examples:
-```bash
-GET /users HTTP/1.1 => indexGet
-GET /users/1 HTTP/1.1 => indexGet
-POST /users HTTP/1.1 => indexPost
-POST /users/login HTTP/1.1 => loginPost
-```
-
-### Usage
-
-Adding some routes for the next example in `application/config/routes.php` file.
+## Usage
+Adding some routes for the next example in `[your-project]/application/routes/api.php` file (if not exists).
 
 ```php
-$route['users'] = [
-    "get" => "users",
-    "post" => "users",
-    "head" => "users",
-    "options" => "users"
-];
-$route['users(\.)([a-zA-Z0-9_-]+)(.*)'] = [
-    "get" => "users/format/$2$3",
-    "post" => "users/format/$2$3"
-];
-$route['users/([0-9]+)'] = [
-    "get" => "users/index/id/$1",
-    "put" => "users/index/id/$1"
-];
-$route['users/([0-9]+)(\.)([a-zA-Z0-9_-]+)(.*)'] = [
-    "get" => "users/index/id/$1/format/$3$4",
-    "put" => "users/index/id/$1/format/$3$4"
-];
-$route['users/login'] = [
-    "post" => "users/login"
-];
-$route['users/login(\.)([a-zA-Z0-9_-]+)(.*)'] = [
-    "post" => "users/login/format/$2$3"
-];
+\Moudarir\CodeigniterApi\Routes\Router::group('users', ['namespace' => 'api'], function () {
+    \Moudarir\CodeigniterApi\Routes\Router::get('', 'apiUsers@index');
+    \Moudarir\CodeigniterApi\Routes\Router::post('', 'apiUsers@create');
+    \Moudarir\CodeigniterApi\Routes\Router::post('login', 'apiUsers@login');
+    \Moudarir\CodeigniterApi\Routes\Router::put('{id}', 'apiUsers@update');
+    \Moudarir\CodeigniterApi\Routes\Router::get('{id}', 'apiUsers@show');
+});
+
+// This will generate route array like this:
+/**
+$route = [
+  "users" => [
+    "GET" => "api/apiUsers/index",
+    "POST" => "api/apiUsers/create",
+  ],
+  "users/login" => [
+    "POST" => "api/apiUsers/login"
+  ],
+  "users/([0-9]+)" => [
+    "PUT" => "api/apiUsers/update/$1"
+    "GET" => "api/apiUsers/show/$1"
+  ],
+  "default_controller" => "welcome", // Can be changed in '[your-project]/application/config/rest-api-server.php' file.
+  "translate_uri_dashes" => false, // Can be changed in '[your-project]/application/config/rest-api-server.php' file.
+  "404_override" => "pageNotFound/index", // Can be changed in '[your-project]/application/config/rest-api-server.php' file.
+]
+**/
 ```
 
-And now, we can create our `application/controllers/Users.php` controller:
+And now, we can create our `[your-project]/application/controllers/api/ApiUsers.php` controller:
 
 ```php
-
 <?php
 defined('BASEPATH') || exit('No direct script access allowed');
 
 use Firebase\JWT\JWT;
+use Moudarir\CodeigniterApi\Exceptions\DatabaseCreateException;
+use Moudarir\CodeigniterApi\Http\Server;
 use Moudarir\CodeigniterApi\Models\ApiKey;
 use Moudarir\CodeigniterApi\Models\User;
 
-/**
- * @property Users
- */
-class Users extends CoreApi
+class ApiUsers extends Server
 {
 
-    /**
-     * ApiUsers constructor.
-     */
-    public function __construct()
+    public function index()
     {
-        parent::__construct();
-    }
-
-    /**
-     * @see ApiUsers::indexGet()
-     */
-    public function indexGet()
-    {
-        $id = $this->get('id');
         $entity = new User();
-
-        if ($id !== null) {
-            if ((int)$id <= 0) {
-                self::getResponse()->badRequest();
-            }
-
-            $item = $entity->find($id);
-
-            if ($item === null) {
-                self::getResponse()->notFound();
-            }
-
-            self::getResponse()->ok(['item' => $item]);
-        }
-
-        
-        $options = [
-            'page' => $this->get('page'),
-            'limit' => $this->get('limit')
-        ];
-        $total = $entity->count($options);
+        $page = $this->get('page');
+        $total = $entity->count();
         $response = [
             'total' => $total,
-            'items' => $total === 0 ? [] : $entity->all($options),
+            'items' => $total === 0 ? [] : $entity->all(['page' => $page, 'limit' => $this->get('limit')]),
         ];
 
-        if ($options['page'] !== null) {
-            $response['page'] = (int)$options['page'] === 0 ? 1 : (int)$options['page'];
+        if ($page !== null) {
+            $response['page'] = (int)$page === 0 ? 1 : (int)$page;
         }
 
         self::getResponse()->ok($response);
     }
 
-    /**
-     * @see ApiUsers::indexPost()
-     */
-    public function indexPost()
+    public function show(int $id)
+    {
+        if ($id <= 0) {
+            self::getResponse()->badRequest();
+        }
+
+        $item = (new User())->find($id);
+
+        if ($item === null) {
+            self::getResponse()->notFound();
+        }
+
+        self::getResponse()->ok(['item' => $item]);
+    }
+
+    public function create()
     {
         $post = $this->post();
         $errors = [];
@@ -283,83 +196,72 @@ class Users extends CoreApi
             self::getResponse()->error($errors);
         }
 
-        $hashedPassword = password_hash($post['password'], PASSWORD_ARGON2I, [
-            'memory_cost' => 1 << 12, // 4MB
-            'time_cost' => 2,
-            'threads' => 2
-        ]);
-        $this->db->trans_start();
-        $data = [
-            'firstname' => $post['firstname'],
-            'lastname' => $post['lastname'],
-            'email' => $post['email'],
-            'password' => $hashedPassword,
-        ];
-        $user_id = (new User())->add($data);
+        $entity = new User();
 
-        if ($user_id === null) {
-            $this->db->trans_rollback();
+        try {
+            $hashedPassword = password_hash($post['password'], PASSWORD_ARGON2I, [
+                'memory_cost' => 1 << 12,
+                'time_cost' => 2,
+                'threads' => 2
+            ]);
+            $entity::getDatabase()->trans_start();
+            $user = $entity
+                ->setFirstname($post['firstname'])
+                ->setLastname($post['lastname'])
+                ->setEmail($post['email'])
+                ->setPassword($hashedPassword)
+                ->create();
+
+            $apikey = (new ApiKey())
+                ->setUserId($user->getId())
+                ->setKey()
+                ->setUsername()
+                ->setPassword()
+                ->create();
+
+            if ($entity::getDatabase()->trans_status() === false) {
+                $entity::getDatabase()->trans_rollback();
+            } else {
+                $entity::getDatabase()->trans_commit();
+            }
+
+            self::getResponse()->ok([
+                'message' => "User account created successfully.",
+                'data' => [
+                    'user_id' => $user->getId(),
+                    'api_key' => $apikey->getKey(),
+                    'username' => $apikey->getUsername(),
+                    'password' => $apikey->getPassword(),
+                ]
+            ]);
+        } catch (DatabaseCreateException $e) {
+            $entity::getDatabase()->trans_rollback();
             self::getResponse()->error("Error occurred during account creation.");
         }
-
-        $akEntity = new ApiKey();
-        $akData = [
-            'user_id' => $user_id,
-            'key' => $akEntity->setKey(),
-            'username' => $akEntity->setUsername(),
-            'password' => $akEntity->setPassword(),
-        ];
-        $api_key_id = $akEntity->add($akData);
-
-        if ($api_key_id === null) {
-            $this->db->trans_rollback();
-            self::getResponse()->error("Error occurred during account creation.");
-        }
-
-        if ($this->db->trans_status() === false) {
-            $this->db->trans_rollback();
-        } else {
-            $this->db->trans_commit();
-        }
-
-        self::getResponse()->ok([
-            'message' => "User account created successfully.",
-            'data' => [
-                'user_id' => $akData['user_id'],
-                'api_key' => $akData['key'],
-                'username' => $akData['username'],
-                'password' => $akData['password'],
-            ]
-        ]);
     }
 
-    /**
-     * @see ApiUsers::indexPut()
-     */
-    public function indexPut()
+    public function update($id)
     {
         self::getResponse()->ok([
             'data' => [
                 'info' => $this->getAuthData(),
-                'args' => $this->put()
+                'args' => $this->put(),
+                'id' => $id,
             ]
         ]);
     }
 
-    /**
-     * @see ApiUsers::loginPost()
-     */
-    public function loginPost()
+    public function login()
     {
+        $apiConfig = $this->getApiConfig();
         $secret = getenv("JWT_SECRET");
-        $secret !== false || $secret = $this->getApiConfig()['jwt_secret'];
+        $secret !== false || $secret = $apiConfig['jwt_secret'];
         $user = (new User())->find($this->getApiKey()['user_id']);
         $payload = [
             'iss' => 'http://example.org',
             'aud' => 'http://example.com',
             'iat' => 1356999524,
             'nbf' => 1357000000,
-            'exp' => time() + (60 * 60),
             'user' => [
                 'user_id' => $user['id'],
                 'firstname' => $user['firstname'],
@@ -369,36 +271,37 @@ class Users extends CoreApi
         ];
         self::getResponse()->ok([
             'data' => [
-                'jwt_key' => JWT::encode($payload, $secret, 'HS256'),
+                'jwt_key' => JWT::encode($payload, $secret, $apiConfig['jwt_algorithm']),
             ]
         ]);
     }
 }
-
 ```
 
-**Authentication methods**
+### Authentication methods
+The Rest Server can be used with `Basic` or `Bearer` authorization type. However, it can be used without any authorization type (`not secure`).
 
-The Rest Server can be used/combined with `basic` and `Bearer` authorization type. However, it's can be used without any authorization type (`not secure`)
+The request limit currently only works in the `Basic` authorization type.
 
-### Postman collection
+## Postman collection
 
-#### Import the collection
-
+### Import the collection
 Downloaded our [Postman collection](https://github.com/moudarir/codeigniter-rest-api/blob/master/Codeigniter%20API%20REST.postman_collection.json "Codeigniter REST API Postman Collection"), and import it into Postman.
 
-#### Import the environment
-
+### Import the environment
 We have also provided a [Postman Environment](https://github.com/moudarir/codeigniter-rest-api/blob/master/Codeigniter%20API%20REST.postman_environment.json "Codeigniter REST API Postman Environment") that you need to import as well.
 
-> **Note:** To understand what Postman environments are, please check [this link](https://learning.postman.com/docs/sending-requests/managing-environments/ "Managing environments in Postman").
+> To understand what Postman environments are, please check [this link](https://learning.postman.com/docs/sending-requests/managing-environments/ "Managing environments in Postman").
 
-**Edit the environment variables**
-
+### Edit the environment variables
 Update the `endpoint` variable to point to your Rest server. Ex: (https//myapi.com/) with trailing slash.
 
 ✨ That's it!
 
 You can now use the Postman collection to test available requests.
 
-> **Note:** In the Postman collection, the order of execution of the requests must be respected.
+> In the Postman collection, the order of execution of the requests must be respected.
+
+## Todo
+- Write routing HOW TO USE documentation.
+- Improve documentation.

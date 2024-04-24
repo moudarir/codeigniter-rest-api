@@ -18,20 +18,24 @@
 								"exec": [
 									"var response = JSON.parse(responseBody);",
 									"",
-									"if (response.data.user_id) {",
-									"  postman.setEnvironmentVariable(\"user_id\", response.data.user_id);",
+									"if (response.data) {",
+									"  if (response.data.user_id) {",
+									"    postman.setEnvironmentVariable(\"user_id\", response.data.user_id);",
+									"  }",
+									"  if (response.data.api_key) {",
+									"    postman.setEnvironmentVariable(\"api_key\", response.data.api_key);",
+									"  }",
+									"  if (response.data.username) {",
+									"    postman.setEnvironmentVariable(\"username\", response.data.username);",
+									"  }",
+									"  if (response.data.password) {",
+									"    postman.setEnvironmentVariable(\"password\", response.data.password);",
+									"  }",
 									"}",
-									"if (response.data.api_key) {",
-									"  postman.setEnvironmentVariable(\"api_key\", response.data.api_key);",
-									"}",
-									"if (response.data.username) {",
-									"  postman.setEnvironmentVariable(\"username\", response.data.username);",
-									"}",
-									"if (response.data.password) {",
-									"  postman.setEnvironmentVariable(\"password\", response.data.password);",
-									"}"
+									""
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {}
 							}
 						}
 					],
@@ -47,10 +51,16 @@
 								"type": "text"
 							},
 							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							},
+							{
 								"key": "Accept",
 								"value": "application/json",
 								"type": "text",
-								"description": "Optional"
+								"description": "Optional",
+								"disabled": true
 							}
 						],
 						"body": {
@@ -80,12 +90,15 @@
 								"exec": [
 									"var response = JSON.parse(responseBody);",
 									"",
-									"if (response.data.jwt_key) {",
-									"  postman.setEnvironmentVariable(\"jwt_key\", response.data.jwt_key);",
+									"if (response.data) {",
+									"  if (response.data.jwt_key) {",
+									"    postman.setEnvironmentVariable(\"jwt_key\", response.data.jwt_key);",
+									"  }",
 									"}",
 									""
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {}
 							}
 						}
 					],
@@ -98,6 +111,11 @@
 							{
 								"key": "X-API-KEY",
 								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
 								"type": "text"
 							},
 							{
@@ -115,14 +133,6 @@
 							],
 							"path": [
 								"login"
-							],
-							"query": [
-								{
-									"key": "format",
-									"value": "xml",
-									"description": "Optional",
-									"disabled": true
-								}
 							]
 						}
 					},
@@ -142,8 +152,13 @@
 								"type": "text"
 							},
 							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							},
+							{
 								"key": "Accept",
-								"value": "application/xml",
+								"value": "application/javascript",
 								"type": "text",
 								"description": "Optional",
 								"disabled": true
@@ -156,14 +171,6 @@
 							],
 							"path": [
 								"{{user_id}}"
-							],
-							"query": [
-								{
-									"key": "format",
-									"value": "xml",
-									"description": "Optional",
-									"disabled": true
-								}
 							]
 						}
 					},
@@ -188,6 +195,11 @@
 						"method": "GET",
 						"header": [
 							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							},
+							{
 								"key": "Accept",
 								"value": "application/xml",
 								"type": "text",
@@ -202,14 +214,6 @@
 							],
 							"path": [
 								"{{user_id}}"
-							],
-							"query": [
-								{
-									"key": "format",
-									"value": "xml",
-									"description": "Optional",
-									"disabled": true
-								}
 							]
 						}
 					},
@@ -226,6 +230,11 @@
 							{
 								"key": "X-API-KEY",
 								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
 								"type": "text"
 							},
 							{
@@ -251,12 +260,6 @@
 								{
 									"key": "limit",
 									"value": "10",
-									"description": "Optional",
-									"disabled": true
-								},
-								{
-									"key": "format",
-									"value": "xml",
 									"description": "Optional",
 									"disabled": true
 								}
@@ -284,15 +287,14 @@
 						"method": "GET",
 						"header": [
 							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							},
+							{
 								"key": "Accept",
 								"value": "application/xml",
 								"description": "Optional",
-								"type": "text",
-								"disabled": true
-							},
-							{
-								"key": "",
-								"value": "",
 								"type": "text",
 								"disabled": true
 							}
@@ -314,12 +316,6 @@
 									"value": "10",
 									"description": "Optional",
 									"disabled": true
-								},
-								{
-									"key": "format",
-									"value": "xml",
-									"description": "Optional",
-									"disabled": true
 								}
 							]
 						}
@@ -335,7 +331,8 @@
 								"exec": [
 									""
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {}
 							}
 						}
 					],
@@ -354,7 +351,13 @@
 							]
 						},
 						"method": "PUT",
-						"header": [],
+						"header": [
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n    \"firstname\": \"jane\",\n    \"lastname\": \"Doe\"\n}",

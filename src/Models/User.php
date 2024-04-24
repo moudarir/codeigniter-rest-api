@@ -2,94 +2,90 @@
 
 namespace Moudarir\CodeigniterApi\Models;
 
-use CI_Model;
-
-class User extends CI_Model
+class User extends Model
 {
 
-    /**
-     * User constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
+    public string $firstname;
 
-    /**
-     * @param int|null $id
-     * @return array|null
-     */
+    public string $lastname;
+
+    public string $email;
+
+    public string $password;
+
+    protected string $table = 'users';
+
+    protected string $alias = 'u';
+
     public function find(int $id): ?array
     {
         if ($id <= 0) {
             return null;
         }
 
-        $query = $this->db
-            ->select('`u`.*')
-            ->from('`users` `u`')
-            ->where('`u`.`id`', $id, true)
-            ->limit(1)->get();
-
-        return ($query !== false && $query->num_rows() > 0) ? $query->row_array() : null;
+        return $this->fetchOne(['`'.$this->alias.'`.`id`' => $id]);
     }
 
-    /**
-     * @param array $options
-     * @return array[]|array
-     */
     public function all(array $options = []): array
     {
-        $page = (array_key_exists('page', $options) && (int)$options['page'] > 0)
-            ? (int)$options['page']
-            : 1;
-        $limit = (array_key_exists('limit', $options) && (int)$options['limit'] > 0)
-            ? (int)$options['limit']
-            : 20;
-        $offset = $limit * ($page - 1);
-        $query = $this->db
-            ->select('`u`.*')->from('`users` `u`')
-            ->limit($limit, $offset)
-            ->get();
-        return ($query !== false && $query->num_rows() > 0) ? $query->result_array() : ['ko' => $this->db->last_query()];
-    }
+        $param = [];
 
-    /**
-     * @param array|null $options
-     * @return int
-     */
-    public function count(?array $options = null): int
-    {
-        $default = ['ids' => null];
-        $config = is_array($options) ? array_merge($default, $options) : $default;
-        $this->db->select('`u`.`id`')->from('`users` `u`');
-
-        if ($config['ids'] !== null) {
-            $ids = is_array($config['ids']) ? $config['ids'] : [(int)$config['ids']];
-            $this->db->where_in('`u`.`id`', $ids, true);
+        if (\array_key_exists('page', $options)) {
+            $param['page'] = $options['page'];
+        }
+        if (\array_key_exists('limit', $options)) {
+            $param['limit'] = $options['limit'];
         }
 
-        return $this->db->get()->num_rows();
+        return $this->fetchAll($param);
     }
 
-    /**
-     * @param array $data
-     * @return int|null
-     */
-    public function add(array $data): ?int
+    public function count(): int
     {
-        if (!array_key_exists('created_at', $data) || !array_key_exists('updated_at', $data)) {
-            $currentDate = date("Y-m-d H:i:s", time());
-            if (!array_key_exists('created_at', $data)) {
-                $data['created_at'] = $currentDate;
-            }
-            if (!array_key_exists('updated_at', $data)) {
-                $data['updated_at'] = $currentDate;
-            }
-        }
+        return $this->countAll();
+    }
 
-        $this->db->insert('`users`', $data, true);
+    public function getFirstname(): string
+    {
+        return $this->firstname;
+    }
 
-        return $this->db->affected_rows() > 0 ? $this->db->insert_id() : null;
+    public function getLastname(): string
+    {
+        return $this->lastname;
+    }
+
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setFirstname(string $firstname): self
+    {
+        $this->firstname = $firstname;
+        return $this;
+    }
+
+    public function setLastname(string $lastname): self
+    {
+        $this->lastname = $lastname;
+        return $this;
+    }
+
+    public function setEmail(string $email): self
+    {
+        $this->email = $email;
+        return $this;
+    }
+
+    public function setPassword(string $password): self
+    {
+        $this->password = $password;
+        return $this;
     }
 }

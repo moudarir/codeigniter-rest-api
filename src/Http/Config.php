@@ -5,6 +5,12 @@ namespace Moudarir\CodeigniterApi\Http;
 class Config
 {
 
+    const SUPPORTED_FORMATS = [
+        'json' => 'application/json',
+        'jsonp' => 'application/javascript',
+        'xml' => 'application/xml',
+    ];
+
     /**
      * Common HTTP status codes.
      */

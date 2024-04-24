@@ -2,53 +2,51 @@
 
 namespace Moudarir\CodeigniterApi\Http;
 
+use Moudarir\CodeigniterApi\Exceptions\DatabaseCreateException;
+use Moudarir\CodeigniterApi\Helpers\CommonHelper;
 use Moudarir\CodeigniterApi\Models\ApiKeyLog;
 
 class Logger
 {
 
-    /**
-     * @var int|null
-     */
-    private ?int $log_id = null;
+    private ApiKeyLog $api_key_log;
 
-    /**
-     * Logger constructor.
-     */
-    public function __construct()
+    public function push(array $data): self
     {
+        if (!isset($this->api_key_log)) {
+            $this->api_key_log = new ApiKeyLog();
+        }
+
+        if (\array_key_exists('key_id', $data)) {
+            $this->api_key_log->setKeyId($data['key_id']);
+        }
+        if (\array_key_exists('method', $data)) {
+            $this->api_key_log->setMethod($data['method']);
+        }
+        if (\array_key_exists('response_time', $data)) {
+            $this->api_key_log->setResponseTime($data['response_time']);
+        }
+        if (\array_key_exists('response_code', $data)) {
+            $this->api_key_log->setResponseCode($data['response_code']);
+        }
+        if (\array_key_exists('authorized', $data)) {
+            $this->api_key_log->setAuthorized($data['authorized']);
+        }
+
+        return $this;
     }
 
-    /**
-     * @param array $data
-     * @return bool
-     */
-    public function add(array $data): bool
+    public function flush(): bool
     {
-        $this->log_id = (new ApiKeyLog())->add($data);
-        return $this->log_id !== null;
-    }
-
-    /**
-     * @param array $data
-     * @return bool
-     */
-    public function update(array $data): bool
-    {
-        if (!empty($data) && $this->getLogId() !== null) {
-            $entity = new ApiKeyLog();
-
-            return $entity->edit($this->getLogId(), $data);
+        if (isset($this->api_key_log)) {
+            try {
+                $this->api_key_log->setUriString()->setIpAddress()->create();
+                return true;
+            } catch (DatabaseCreateException $exception) {
+                CommonHelper::logException($exception);
+            }
         }
 
         return false;
-    }
-
-    /**
-     * @return int|null
-     */
-    public function getLogId(): ?int
-    {
-        return $this->log_id;
     }
 }

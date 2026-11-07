@@ -1,27 +1,35 @@
 {
   "name": "moudarir/codeigniter-rest-api",
-  "description": "Codeigniter 3 Rest API",
-  "version": "3.0.0",
+  "description": "A RESTful server implementation for CodeIgniter 3",
   "type": "library",
+  "homepage": "https://github.com/moudarir/codeigniter-rest-api",
   "license": "MIT",
+  "keywords": [
+    "CodeIgniter 3",
+    "REST API",
+    "HTTP",
+    "Server",
+    "php"
+  ],
   "authors": [
     {
       "name": "Abdessamad MOUDARIR",
-      "email": "amoudarir@gmail.com",
-      "role": "Lead Developer"
+      "email": "amoudarir@gmail.com"
     }
   ],
+  "support": {
+    "issues": "https://github.com/moudarir/codeigniter-rest-api/issues",
+    "source": "https://github.com/moudarir/codeigniter-rest-api"
+  },
   "require": {
-    "php": ">=7.4",
+    "php": "^8.4",
     "ext-json": "*",
-    "ext-libxml": "*",
-    "ext-simplexml": "*",
-    "firebase/php-jwt": "^6.3",
-    "nesbot/carbon": "^2.72"
+    "firebase/php-jwt": "^7.0",
+    "moudarir/helpers": "^1.7"
   },
   "autoload": {
     "psr-4" : {
-      "Moudarir\\CodeigniterApi\\" : "src/"
+      "Moudarir\\CIRestApi\\" : "src/"
     }
   }
 }
